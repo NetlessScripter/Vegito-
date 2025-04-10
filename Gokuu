@@ -5993,7 +5993,7 @@ local function executeVFX()
 
         local soundSFX2 = Instance.new("Sound")
         soundSFX2.SoundId = "rbxassetid://17150550559"
-        soundSFX2.Volume = 2
+        soundSFX2.Volume = 4
         soundSFX2.Name = "SFX2"
         soundSFX2.Parent = humRp
         soundSFX2:Play()
@@ -6387,7 +6387,7 @@ game:GetService("ReplicatedStorage").DefaultChatSystemChatEvents.SayMessageReque
 end)()
 end)
 
-        delay(7.7, function()
+        delay(8.7, function()
             for _, Particles in pairs(boom2:GetDescendants()) do
                 if Particles:IsA("ParticleEmitter") then
                     Particles:Emit(Particles:GetAttribute("EmitCount"))
