@@ -1,65 +1,12 @@
-local a = Instance.new("Animation")
-a.AnimationId = "rbxassetid://116187503451999"
-game:GetService("Players").LocalPlayer.Character.Humanoid:LoadAnimation(a):Play()
-  local l_Accessory_6 = Instance.new("Accessory");
-                l_Accessory_6.Name = "#EmoteHolder_" .. math.random(1, 100000);
-                l_Accessory_6.Parent = game.Players.LocalPlayer.Character;
-                l_Accessory_6:SetAttribute("EmoteProperty", true);
-                require(game.ReplicatedStorage.Emotes.VFX):MainFunction({
-                    Character = game.Players.LocalPlayer.Character,
-                    vfxName = "Divine Form", 
-                    SpecificModule = game.ReplicatedStorage.Emotes.VFX, 
-                    AnimSent = 116187503451999, 
-                    RealBind = l_Accessory_6
-                });
-                task.delay(7.21, function() --[[ Line: 20663 ]]
-                    -- upvalues: l_Accessory_6 (copy), game.Players.LocalPlayer.Character (ref)
-                    if not l_Accessory_6 or not l_Accessory_6.Parent or not workspace.Live:FindFirstChild((tostring(game.Players.LocalPlayer.Character))) then
-                        return;
-                    else
-                        local l_v129_2 = game.Players.LocalPlayer.Character;
-                        local l_Folder_1 = game.ReplicatedStorage.Emotes.VFX.VfxMods.Evolved.vfx.Folder;
-                        local l_Folder_2 = Instance.new("Folder");
-                        l_Folder_2.Name = "AuraHolder";
-                        l_Folder_2:SetAttribute("DivineForm", true);
-                        l_Folder_2:SetAttribute("LimAura", true);
-                        l_Folder_2:SetAttribute("EmoteEffect", true);
-                        l_Folder_2.Parent = game.Players.LocalPlayer.Character;
-                        task.spawn(function() --[[ Line: 20681 ]]
-                            -- upvalues: l_Folder_1 (copy), l_v129_2 (copy), l_Folder_2 (copy)
-                            for _, v3263 in pairs(l_Folder_1:GetChildren()) do
-                                if v3263:IsA("BasePart") then
-                                    local l_l_v129_2_FirstChild_0 = l_v129_2:FindFirstChild(v3263.Name);
-                                    if l_l_v129_2_FirstChild_0 then
-                                        local v3265 = v3263:Clone();
-                                        task.delay(244, function() --[[ Line: 20687 ]]
-                                            -- upvalues: v3265 (copy)
-                                            if v3265 and v3265.Parent then
-                                                v3265:Destroy();
-                                            end;
-                                        end);
-                                        v3265:SetAttribute("LimAura", true);
-                                        v3265.Transparency = 1;
-                                        v3265.Massless = true;
-                                        local l_Weld_25 = Instance.new("Weld");
-                                        l_Weld_25.Part0 = l_l_v129_2_FirstChild_0;
-                                        l_Weld_25.Part1 = v3265;
-                                        l_Weld_25.Parent = v3265;
-                                        v3265.Name = math.random(1, 1000);
-                                        v3265.Parent = l_Folder_2;
-                                        for _, v3268 in pairs(v3265:GetDescendants()) do
-                                            if v3268:IsA("ParticleEmitter") or v3268:IsA("Beam") then
-                                                v3268:SetAttribute("LimitedAura", true);
-                                                task.delay(240, function() --[[ Line: 20704 ]]
-                                                    -- upvalues: v3268 (copy)
-                                                    v3268.Enabled = false;
-                                                end);
-                                            end;
-                                        end;
-                                    end;
-                                end;
-                            end;
-                        end);
-                        return;
-                    end;
-                end);
+--[[
+ .____                  ________ ___.    _____                           __                
+ |    |    __ _______   \_____  \\_ |___/ ____\_ __  ______ ____ _____ _/  |_  ___________ 
+ |    |   |  |  \__  \   /   |   \| __ \   __\  |  \/  ___// ___\\__  \\   __\/  _ \_  __ \
+ |    |___|  |  // __ \_/    |    \ \_\ \  | |  |  /\___ \\  \___ / __ \|  | (  <_> )  | \/
+ |_______ \____/(____  /\_______  /___  /__| |____//____  >\___  >____  /__|  \____/|__|   
+         \/          \/         \/    \/                \/     \/     \/                   
+          \_Welcome to LuaObfuscator.com   (Alpha 0.10.9) ~  Much Love, Ferib 
+
+]]--
+
+local v0=Instance.new("Animation");v0.AnimationId="rbxassetid://116187503451999";game:GetService("Players").LocalPlayer.Character.Humanoid:LoadAnimation(v0):Play();local v2=Instance.new("Accessory");v2.Name="#EmoteHolder_"   .. math.random(1066 -(68 + 997) ,101270 -(226 + 1044) ) ;v2.Parent=game.Players.LocalPlayer.Character;v2:SetAttribute("EmoteProperty",true);require(game.ReplicatedStorage.Emotes.VFX):MainFunction({Character=game.Players.LocalPlayer.Character,vfxName="Divine Form",SpecificModule=game.ReplicatedStorage.Emotes.VFX,AnimSent=116187503451999 -0 ,RealBind=v2});task.delay(124.21 -(32 + 85) ,function() if ( not v2 or  not v2.Parent or  not workspace.Live:FindFirstChild((tostring(game.Players.LocalPlayer.Character)))) then return;else local v6=0;local v7;local v8;local v9;while true do if (v6==(2 + 0)) then v9:SetAttribute("DivineForm",true);v9:SetAttribute("LimAura",true);v6=3;end if (v6==(1 + 2)) then v9:SetAttribute("EmoteEffect",true);v9.Parent=game.Players.LocalPlayer.Character;v6=961 -(892 + 65) ;end if (v6==(2 -1)) then v9=Instance.new("Folder");v9.Name="AuraHolder";v6=2;end if (v6==0) then v7=game.Players.LocalPlayer.Character;v8=game.ReplicatedStorage.Emotes.VFX.VfxMods.Evolved.vfx.Folder;v6=1 -0 ;end if (v6==4) then task.spawn(function() for v15,v16 in pairs(v8:GetChildren()) do if v16:IsA("BasePart") then local v17=0 -0 ;local v18;while true do if (v17==(350 -(87 + 263))) then v18=v7:FindFirstChild(v16.Name);if v18 then local v19=v16:Clone();task.delay(424 -(67 + 113) ,function() if (v19 and v19.Parent) then v19:Destroy();end end);v19:SetAttribute("LimAura",true);v19.Transparency=1 + 0 ;v19.Massless=true;local v22=Instance.new("Weld");v22.Part0=v18;v22.Part1=v19;v22.Parent=v19;v19.Name=math.random(2 -1 ,736 + 264 );v19.Parent=v9;for v28,v29 in pairs(v19:GetDescendants()) do if (v29:IsA("ParticleEmitter") or v29:IsA("Beam")) then local v30=0;while true do if (v30==(0 -0)) then v29:SetAttribute("LimitedAura",true);task.delay(1192 -(802 + 150) ,function() v29.Enabled=false;end);break;end end end end end break;end end end end end);return;end end end end);
