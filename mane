@@ -143,8 +143,8 @@ check.MouseButton1Click:Connect(function()
 		local Window = Library:CreateWindow({Title = "Ink Game", Footer = "v2.9.3 - BETA", ToggleKeybind = Enum.KeyCode.RightControl, Center = true, AutoShow = true})
 		local PlayerTab = Window:AddTab("Player", "user")
 		local ExploitsTab = Window:AddTab("Exploits", "zap")
-		local MovementGroup = PlayerTab:AddLeftGroup("Movement")
-		local ExploitsGroup = ExploitsTab:AddRightGroup("Exploits")
+		local MovementGroup = PlayerTab:AddLeftGroupBox("Movement")
+		local ExploitsGroup = ExploitsTab:AddRightGroupBox("Exploits")
 		local conn
 		MovementGroup:AddToggle("FaceCameraDirection", {
 			Text = "Face Camera Direction",
