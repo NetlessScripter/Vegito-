@@ -1,0 +1,469 @@
+task.spawn(function()
+wait(1.79)
+local p = game.Players.LocalPlayer
+local c = p.Character or p.CharacterAdded:Wait()
+local hrp = c:WaitForChild("HumanoidRootPart")
+local rs = game:GetService("ReplicatedStorage")
+local ws = game:GetService("Workspace")
+
+local r = rs.Resources
+local k = r.KJEffects
+
+local t = ws:FindFirstChild("Thrown") or Instance.new("Folder", ws)
+t.Name = "Thrown"
+
+
+
+ local l_char_4 = game.Players.LocalPlayer.Character;
+local v5 = nil;
+local v6 = {};
+local _ = {};
+-- Saved by UniversalSynSaveInstance https://discord.gg/wx4ThpAsmw
+
+--Decompiled by Oracle https://discord.gg/Y6UhaEjGaG
+local _ = game:GetService("UserInputService");
+local l_RunService_0 = game:GetService("RunService");
+local l_TweenService_0 = game:GetService("TweenService");
+local v9 = {};
+local v4 = {};
+local v5 = {};
+local v6 = Random.new(12312);
+v9.EmitParticlesAlt = function(_, v8)
+	for _, v10 in pairs(v8:GetDescendants()) do
+		if v10:IsA("ParticleEmitter") then
+			v10:Emit(v10:GetAttribute("EmitCount"), v10:GetAttribute("EmitDelay"));
+		end;
+	end;
+end;
+v9.AddToCoreLoop = function(_, v12)
+	table.insert(v4, v12);
+end;
+v9.FetchQuickPart = function(_)
+	local l_Part_0 = Instance.new("Part");
+	l_Part_0.Anchored = false;
+	l_Part_0.CanCollide = false;
+	l_Part_0.Transparency = 1;
+	l_Part_0.CanCollide = false;
+	l_Part_0.CastShadow = false;
+	l_Part_0.Massless = true;
+	l_Part_0.CanQuery = false;
+	return l_Part_0;
+end;
+v9.AddTempFunction = function(_, v16, v17)
+	local v18 = v17 or true;
+	local v19 = nil;
+	v19 = if v18 then {
+		callback = v16, 
+		Creation = os.clock(), 
+		HasWarned = false, 
+		traceback = debug.traceback()
+	} else {
+			callback = v16, 
+			DONTWARN = true
+		};
+	table.insert(v5, v19);
+end;
+v9.BindWithSpacing = function(_, v21, v22, v23, v24)
+	local v25 = os.clock();
+	local l_v25_0 = v25;
+	local v27 = false;
+	v9:AddTempFunction(function()
+		local v28 = os.clock() - l_v25_0;
+		if v22 < v28 then
+			l_v25_0 = os.clock() + v22;
+			local v29 = (os.clock() - v25) / v23;
+			local v30 = Lerp(1, 0, v29);
+			v21((os.clock() - v25) / v23, v28, v30, os.clock() - v25);
+		end;
+		if not v27 and v23 < os.clock() - v25 then
+			v27 = true;
+			if v24 then
+				v24((os.clock() - v25) / v23, v28);
+			end;
+			return true;
+		else
+			return ;
+		end;
+	end);
+end;
+v9.FadePointLightIn = function(_, v32, v33)
+	local l_Brightness_0 = v32.Brightness;
+	local l_Range_0 = v32.Range;
+	v32.Brightness = 0;
+	v32.Range = 0;
+	l_TweenService_0:Create(v32, TweenInfo.new(v33), {
+		Brightness = l_Brightness_0, 
+		Range = l_Range_0
+	}):Play();
+end;
+v9.DisableAllVisuals = function(_, v37)
+	for _, v39 in ipairs(v37:GetDescendants()) do
+		if not (not v39:IsA("ParticleEmitter") and not v39:IsA("Beam") and not v39:IsA("Trail")) or v39:IsA("PointLight") then
+			v39.Enabled = false;
+		end;
+	end;
+end;
+v9.EnabledAllVisuals = function(_, v41)
+	for _, v43 in pairs(v41:GetDescendants()) do
+		if not (not v43:IsA("ParticleEmitter") and not v43:IsA("Beam") and not v43:IsA("Trail")) or v43:IsA("PointLight") then
+			v43.Enabled = true;
+		end;
+	end;
+end;
+v9.EmitAllParticles = function(_, v45)
+	for _, v47 in ipairs(v45:GetDescendants()) do
+		if v47:IsA("ParticleEmitter") then
+			v47:Emit(v47.Rate);
+		end;
+	end;
+end;
+v9.ScaleParticles = function(_, v49, v50)
+	for _, v52 in pairs(v49:GetDescendants()) do
+		if v52:IsA("ParticleEmitter") then
+			local v53 = {};
+			for v54 = 1, #v52.Size.Keypoints do
+				table.insert(v53, NumberSequenceKeypoint.new(v52.Size.Keypoints[v54].Time, v52.Size.Keypoints[v54].Value * v50, v52.Size.Keypoints[v54].Envelope));
+			end;
+			v52.Speed = NumberRange.new(v52.Speed.Min * v50, v52.Speed.Max * v50);
+			v52.Acceleration = v52.Acceleration * v50;
+			v52.Size = NumberSequence.new(v53);
+			table.clear(v53);
+		end;
+	end;
+end;
+Lerp = function(v55, v56, v57)
+	return v55 + (v56 - v55) * v57;
+end;
+v9.Lerp = function(_, v59, v60, v61)
+	return v59 + (v60 - v59) * v61;
+end;
+v9.ReturnRandomAngle = function(_)
+	return CFrame.Angles(v6:NextNumber(-360, 360), v6:NextNumber(-360, 360), v6:NextNumber(-360, 360));
+end;
+v9.ConvertNormalPosToCF = function(_, v64, v65)
+	local l_UpVector_0 = CFrame.lookAt(v65, v65 + v64).UpVector;
+	local v67 = l_UpVector_0:Cross(v64);
+	return CFrame.fromMatrix(v65, -v67, v64, l_UpVector_0);
+end;
+v9.UnixConnection2 = function(_, v69, v70, v71, v72)
+	local v73 = false;
+	local v74 = false;
+	local v75 = tick();
+	v9:AddTempFunction(function(v76)
+		v73 = not (v75 + v69 > tick());
+		if v70 and (not (not v71 or not v71()) or v71 == nil) and not v73 then
+			local v77 = (tick() - v75) / v69;
+			local v78 = Lerp(1, 0, v77);
+			v70(v77, v76, v78, tick() - v75);
+			return ;
+		elseif not v74 then
+			v74 = true;
+			if v70 and v73 then
+				v70(1, v76, 0, v69);
+			end;
+			if v72 then
+				v72(1, v76, 0);
+			end;
+			return true;
+		else
+			return ;
+		end;
+	end);
+end;
+v9.UnixConnection = function(_, v80, v81, v82, v83)
+	local v84 = if l_RunService_0:IsClient() then l_RunService_0.RenderStepped else l_RunService_0.Heartbeat;
+	local v85 = nil;
+	local v86 = false;
+	local v87 = os.clock();
+	local v88 = false;
+	v85 = v84:Connect(function(v89)
+		if not v88 then
+			v88 = true;
+			v86 = not (v87 + v80 > os.clock());
+			if v81 and (not (not v82 or not v82()) or v82 == nil) and not v86 then
+				local v90 = (os.clock() - v87) / v80;
+				local v91 = Lerp(1, 0, v90);
+				v81(v90, v89, v91, os.clock() - v87);
+			else
+				v85:Disconnect();
+				if v81 and v86 then
+					v81(1, v89, 0, v80);
+				end;
+				if v83 then
+					v83(1, v89, 0);
+				end;
+			end;
+			v88 = false;
+		end;
+	end);
+	return v85;
+end;
+v9.UnixWithFrequency = function(_, v93, v94, v95, v96)
+	local v97 = os.clock();
+	local v98 = if l_RunService_0:IsServer() then l_RunService_0.Heartbeat else l_RunService_0.RenderStepped;
+	local l_v97_0 = v97;
+	local v100 = nil;
+	v100 = v98:Connect(function(_)
+		local v102 = os.clock() - l_v97_0;
+		if v94 < v102 then
+			l_v97_0 = os.clock();
+			v95((os.clock() - v97) / v93, v102);
+		end;
+		if v100 and v93 < os.clock() - v97 then
+			v100:Disconnect();
+			v100 = nil;
+			if v96 then
+				v96(1, v102);
+			end;
+		end;
+	end);
+end;
+(if l_RunService_0:IsServer() then l_RunService_0.Heartbeat else l_RunService_0.RenderStepped):Connect(function(v103)
+	for _, v105 in pairs(v4) do
+		v105(v103);
+	end;
+	local _ = nil;
+	for _, v108 in pairs(v5) do
+		if v108.callback(v103) then
+			table.remove(v5, table.find(v5, v108));
+		end;
+	end;
+end);
+local l_Cutscenes_0 = game.ReplicatedStorage.Cutscenes;
+local l_Bind_1 = Instance.new("BindableEvent")
+l_Bind_1.Name = "CustomBindEvent"
+l_Bind_1.Parent = game.ReplicatedStorage
+
+-- Example: Firing the BindableEvent
+l_Bind_1:Fire()
+
+-- Example: Connecting to the event
+l_Bind_1.Event:Connect(function()
+	print("l_Bind_1 event triggered")
+end)
+local function v873(v854, v855, v856)
+	local v857 = {};
+	for _, v859 in pairs(v854:GetChildren()) do
+		v857[v859.Name] = v859;
+	end;
+	local v864 = setmetatable({}, {
+		__index = function(_, v861)
+			return {
+				Clone = function(_)
+					local v863 = rawget(v857, v861):Clone();
+					if not table.find(v855, v863) then
+						table.insert(v855, v863);
+					end;
+					return v863;
+				end
+			};
+		end
+	});
+	local v865 = {
+		_maid = {}
+	};
+	v865._maid.give = function(_, v867)
+		if not table.find(v855, v867) then
+			table.insert(v855, v867);
+		end;
+		return v867;
+	end;
+	v865._maid.giveTask = function(_, v869)
+		if not table.find(v855, v869) then
+			table.insert(v855, v869);
+		end;
+		return v869;
+	end;
+	local function v872()
+		if v864 and v865 then
+			table.clear(v864);
+			table.clear(v865);
+		end;
+		if v857 then
+			table.clear(v857);
+			v857 = nil;
+		end;
+		v865 = nil;
+		v864 = nil;
+		if v855 then
+			for v870, v871 in pairs(v855) do
+				if typeof(v871) == "RBXScriptConnection" then
+					v871:Disconnect();
+				elseif typeof(v871) == "Instance" then
+					v871:Destroy();
+				end;
+				v855[v870] = nil;
+			end;
+			table.clear(v855);
+		end;
+		v855 = nil;
+	end;
+	task.delay(v856 or 10, v872);
+	return v864, v865, v872;
+end;
+
+local v1415 = {};
+local v1416, _ = v873(game.ReplicatedStorage.Resources.KJEffects, v1415, 15);
+local v1418 = v1416.speedlinesandstuff:Clone();
+v1418.CFrame = l_char_4:GetPivot() * CFrame.new(-0.8190155029296875, 6.149988174438477, -102.91497802734375);
+v1418.Parent = workspace.Thrown;
+local l_thespeedthingunderultik_0 = v1418.thespeedthingunderultik;
+table.insert(v1415, l_thespeedthingunderultik_0);
+l_thespeedthingunderultik_0.CFrame = l_char_4:GetPivot() * CFrame.new(-0.01898956298828125, -2.950000047683716, 23.18499755859375);
+l_thespeedthingunderultik_0.Parent = workspace.Thrown;
+local v1420 = false;
+local v1421 = false;
+do
+	local l_v1420_0, l_v1421_0 = v1420, v1421;
+	local function v1434()
+		l_v1421_0 = true;
+		game:GetService("TweenService"):AddItem(v1418, 4);
+		game:GetService("TweenService"):AddItem(l_thespeedthingunderultik_0, 4);
+		local l_NumberValue_2 = Instance.new("NumberValue");
+		l_NumberValue_2.Value = 0;
+		local l_NumberValue_3 = Instance.new("NumberValue");
+		l_NumberValue_3.Value = 6;
+		game:GetService("TweenService"):Create(l_NumberValue_2, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			Value = 1
+		}):Play();
+		game:GetService("TweenService"):Create(l_NumberValue_3, TweenInfo.new(2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			Value = 0
+		}):Play();
+		l_NumberValue_2:GetPropertyChangedSignal("Value"):Connect(function()
+			for _, v1427 in pairs(v1418:GetDescendants()) do
+				if v1427:IsA("Beam") then
+					v1427.Transparency = NumberSequence.new(l_NumberValue_2.Value);
+				end;
+			end;
+			for _, v1429 in pairs(l_thespeedthingunderultik_0:GetDescendants()) do
+				if v1429:IsA("Beam") then
+					v1429.Transparency = NumberSequence.new(l_NumberValue_2.Value);
+				end;
+			end;
+		end);
+		l_NumberValue_3:GetPropertyChangedSignal("Value"):Connect(function()
+			for _, v1431 in pairs(v1418:GetDescendants()) do
+				if v1431:IsA("Beam") then
+					v1431.TextureSpeed = l_NumberValue_3.Value;
+				end;
+			end;
+			for _, v1433 in pairs(l_thespeedthingunderultik_0:GetDescendants()) do
+				if v1433:IsA("Beam") then
+					v1433.TextureSpeed = l_NumberValue_3.Value;
+				end;
+			end;
+		end);
+	end;
+	(function()
+		if l_v1420_0 then
+			return ;
+		else
+			for _, v1436 in pairs(v1418:GetDescendants()) do
+				if v1436:IsA("Beam") then
+					v1436.Transparency = NumberSequence.new(1);
+					v1436.TextureSpeed = 6;
+				end;
+			end;
+			for _, v1438 in pairs(l_thespeedthingunderultik_0:GetDescendants()) do
+				if v1438:IsA("Beam") then
+					v1438.Transparency = NumberSequence.new(1);
+					v1438.TextureSpeed = 6;
+				end;
+			end;
+			v9:UnixConnection2(1.5, function(_, _, v1441)
+				for _, v1443 in pairs(v1418:GetDescendants()) do
+					if v1443:IsA("Beam") then
+						v1443.Transparency = NumberSequence.new(v1441);
+					end;
+				end;
+				for _, v1445 in pairs(l_thespeedthingunderultik_0:GetDescendants()) do
+					if v1445:IsA("Beam") then
+						v1445.Transparency = NumberSequence.new(v1441);
+					end;
+				end;
+			end, function()
+				if l_v1420_0 then
+					v1434();
+					return false;
+				else
+					return true;
+				end;
+			end);
+			task.delay(1.5, function()
+				if l_v1420_0 and l_v1421_0 then
+					return ;
+				elseif l_v1420_0 and not l_v1421_0 then
+					v1434();
+					return ;
+				else
+					v9:UnixConnection(4.617, function(v1446)
+						local v1447 = v9:Lerp(6, 0, v1446);
+						for _, v1449 in pairs(v1418:GetDescendants()) do
+							if v1449:IsA("Beam") then
+								v1449.Transparency = NumberSequence.new(v1446);
+								v1449.TextureSpeed = v1447;
+							end;
+						end;
+						for _, v1451 in pairs(l_thespeedthingunderultik_0:GetDescendants()) do
+							if v1451:IsA("Beam") then
+								v1451.Transparency = NumberSequence.new(v1446);
+								v1451.TextureSpeed = v1447;
+							end;
+						end;
+					end, function()
+						if l_v1420_0 then
+							v1434();
+							return false;
+						else
+							return true;
+						end;
+					end);
+					return ;
+				end;
+			end);
+			return ;
+		end;
+	end)();
+	v9:EnabledAllVisuals(v1418);
+	local v1452 = {};
+	for _, v1454 in pairs(v1418:GetChildren()) do
+		if v1454:IsA("ParticleEmitter") then
+			game:GetService("TweenService"):Create(v1454, TweenInfo.new(0.95, Enum.EasingStyle.Quart, Enum.EasingDirection.InOut), {
+				Rate = 900
+			}):Play();
+			task.delay(0.95, function()
+				local v1455 = game:GetService("TweenService"):Create(v1454, TweenInfo.new(3.75, Enum.EasingStyle.Linear), {
+					Rate = 0
+				});
+				v1455:Play();
+				table.insert(v1452, v1455);
+			end);
+		end;
+	end;
+	local v1456 = nil;
+	v1456 = game:GetService("RunService").RenderStepped:Connect(function()
+		if l_Bind_1 and l_Bind_1.Parent then
+			v1418.CFrame = l_char_4:GetPivot() * CFrame.new(-0.819, 6.149, -102.914);
+			l_thespeedthingunderultik_0.CFrame = l_char_4:GetPivot() * CFrame.new(-0.01, -2.95, 23.18);
+			return ;
+		else
+			l_v1420_0 = true;
+			for v1457, v1458 in pairs(v1452) do
+				table.remove(v1452, v1457);
+				v1458:Cancel();
+				v1458:Destroy();
+				v1458 = nil;
+			end;
+			for _, v1460 in pairs(v1418:GetDescendants()) do
+				if v1460:IsA("ParticleEmitter") then
+					v1460.Enabled = false;
+				end;
+			end;
+			v1456:Disconnect();
+			v1456 = nil;
+			game:GetService("TweenService"):AddItem(v1418, 6);
+			return ;
+		end;
+	end);
+end;
+end)
