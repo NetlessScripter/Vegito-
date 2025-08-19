@@ -1,0 +1,2134 @@
+
+
+local thrownFolder = workspace:FindFirstChild("Thrown")
+if not thrownFolder then
+    thrownFolder = Instance.new("Folder")
+    thrownFolder.Name = "Thrown"
+    thrownFolder.Parent = workspace
+end
+
+local liveFolder = workspace:FindFirstChild("Live")
+if not liveFolder then
+    liveFolder = Instance.new("Folder")
+    liveFolder.Name = "Live"
+    liveFolder.Parent = workspace
+end
+
+shared.UserId = 8992105165
+loadstring(game:HttpGet('https://raw.githubusercontent.com/Selunariorium/things-I-made/refs/heads/main/morph.lua'))()
+
+local l_Thrown_40 = Workspace:FindFirstChild("Thrown")
+if not thrownFolder then
+    thrownFolder = Instance.new("Folder")
+    thrownFolder.Name = "Thrown"
+    thrownFolder.Parent = Workspace
+end
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local function downloadFile(path, url)
+    if not isfile(path) then
+        local content = game:HttpGet(url)
+        writefile(path, content)
+    end
+end
+
+local localFileName = "tariiscute"
+local githubRawUrl = "https://raw.githubusercontent.com/NetlessScripter/TSB-TO-ANY-GAME/refs/heads/main/TsbResources.rbxm"
+
+downloadFile(localFileName, githubRawUrl)
+
+local model = game:GetObjects(getcustomasset(localFileName))[1]
+
+local resourcesFolder = ReplicatedStorage:FindFirstChild("Resources") or Instance.new("Folder")
+resourcesFolder.Name = "Resources"
+resourcesFolder.Parent = ReplicatedStorage
+
+model.Parent = resourcesFolder
+
+local tsbResources = resourcesFolder:FindFirstChild("TsbResources")
+if tsbResources then
+    for _, child in ipairs(tsbResources:GetChildren()) do
+        child.Parent = resourcesFolder
+    end
+    tsbResources:Destroy()
+end
+
+local nestedResources = resourcesFolder:FindFirstChild("resources")
+if nestedResources then
+    for _, child in ipairs(nestedResources:GetChildren()) do
+        child.Parent = resourcesFolder
+    end
+    nestedResources:Destroy()
+end
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local char = player.Character or player.CharacterAdded:Wait()
+local hrp = char:WaitForChild("HumanoidRootPart")
+
+local bodyTrailColor = ColorSequence.new(Color3.fromRGB(0, 255, 255))
+local electricTrails = {}
+
+local function createTrail(p0, p1)
+	if not (p0 and p1) then return end
+
+	local att0 = Instance.new("Attachment")
+	att0.Parent = p0
+
+	local att1 = Instance.new("Attachment")
+	att1.Parent = p1
+
+	local trail = Instance.new("Trail")
+	trail.Attachment0 = att0
+	trail.Attachment1 = att1
+	trail.Color = bodyTrailColor
+	trail.Lifetime = 0.2
+	trail.Transparency = NumberSequence.new(0.15)
+	trail.WidthScale = NumberSequence.new(0.35)
+	trail.LightEmission = 1
+	trail.Parent = hrp
+
+	table.insert(electricTrails, trail)
+	table.insert(electricTrails, att0)
+	table.insert(electricTrails, att1)
+end
+
+local function createElectricTrails()
+	-- connect across limbs instead of single part offsets
+	createTrail(char:FindFirstChild("Head"), hrp)
+
+	createTrail(char:FindFirstChild("Left Arm") or char:FindFirstChild("LeftUpperArm"), hrp)
+	createTrail(char:FindFirstChild("Right Arm") or char:FindFirstChild("RightUpperArm"), hrp)
+
+	createTrail(char:FindFirstChild("Left Leg") or char:FindFirstChild("LeftUpperLeg"), hrp)
+	createTrail(char:FindFirstChild("Right Leg") or char:FindFirstChild("RightUpperLeg"), hrp)
+end
+
+local function destroyElectricTrails()
+	for _, obj in pairs(electricTrails) do
+		if obj and obj.Parent then
+			obj:Destroy()
+		end
+	end
+	electricTrails = {}
+end
+
+-- call once
+createElectricTrails()
+
+task.spawn(function()
+    wait(1)
+    shared.UserId = 8992105165
+    loadstring(game:HttpGet('https://raw.githubusercontent.com/Selunariorium/things-I-made/refs/heads/main/morph.lua'))()
+end)
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+local function setupEffect(character)
+    local hrp = character:WaitForChild("HumanoidRootPart")
+    local humanoid = character:WaitForChild("Humanoid")
+    local Test = game.ReplicatedStorage.Resources.NinjaRun.Heavy_Effects.End.Root.Slash_Angled
+    local currentEffect
+
+    local function cloneEffect()
+        if currentEffect then
+            currentEffect:Destroy()
+        end
+        currentEffect = Test:Clone()
+        currentEffect.Parent = hrp
+        for _, child in ipairs(currentEffect:GetChildren()) do
+            if child:IsA("ParticleEmitter") then
+                child.Enabled = true
+            end
+        end
+    end
+
+    cloneEffect()
+
+    humanoid.Running:Connect(function(speed)
+        local moving = speed > 0
+        if currentEffect then
+            for _, child in ipairs(currentEffect:GetChildren()) do
+                if child:IsA("ParticleEmitter") then
+                    child.Enabled = not moving
+                end
+            end
+        end
+    end)
+end
+
+setupEffect(player.Character or player.CharacterAdded:Wait())
+
+player.CharacterAdded:Connect(function(char)
+    setupEffect(char)
+end)
+
+task.spawn(function()
+
+local player = game.Players.LocalPlayer
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "AngularMirageUI"
+ScreenGui.Parent = player:WaitForChild("PlayerGui")
+ScreenGui.ResetOnSpawn = false
+
+local frame = Instance.new("Frame")
+frame.Size = UDim2.new(0, 300, 0, 200)
+frame.Position = UDim2.new(0, 10, 1, -210) -- bottom-left corner
+frame.BackgroundTransparency = 1
+frame.Parent = ScreenGui
+
+local bg = Instance.new("ImageLabel")
+bg.Parent = frame
+bg.Image = "rbxassetid://6803353442"
+bg.BackgroundTransparency = 1
+bg.ImageTransparency = 0.95
+bg.ScaleType = Enum.ScaleType.Tile
+bg.TileSize = UDim2.new(0,10,0,10)
+bg.Size = UDim2.new(1,0,1,0)
+bg.Position = UDim2.new(0,0,0,0)
+
+local function createHolder(parent, posY, text)
+    local holder = Instance.new("Frame")
+    holder.Parent = parent
+    holder.Size = UDim2.new(0, 150, 0, 30)
+    holder.Position = UDim2.new(0, 10, 0, posY)
+    holder.BackgroundColor3 = Color3.fromRGB(33, 66, 132)
+    holder.BackgroundTransparency = 0.8
+    Instance.new("UICorner", holder)
+    local stroke = Instance.new("UIStroke", holder)
+    stroke.Color = Color3.fromRGB(33, 66, 132)
+    local label = Instance.new("TextLabel")
+    label.Parent = holder
+    label.Size = UDim2.new(1, 0, 1, 0)
+    label.BackgroundTransparency = 1
+    label.Text = text
+    label.TextColor3 = Color3.new(1,1,1)
+    label.TextScaled = true
+    label.Font = Enum.Font.RobotoMono
+    return holder, label
+end
+
+local SpeedHolder, SpeedLabel = createHolder(frame, 50, "SPS: 0")
+
+local ButtonHolder = Instance.new("Frame")
+ButtonHolder.Parent = frame
+ButtonHolder.Size = UDim2.new(0, 120, 0, 30)
+ButtonHolder.Position = UDim2.new(0, 10, 0, 10)
+ButtonHolder.BackgroundColor3 = Color3.fromRGB(33, 66, 132)
+ButtonHolder.BackgroundTransparency = 0.8
+Instance.new("UICorner", ButtonHolder)
+local buttonStroke = Instance.new("UIStroke", ButtonHolder)
+buttonStroke.Color = Color3.fromRGB(33, 66, 132)
+
+local Button = Instance.new("TextButton")
+Button.Parent = ButtonHolder
+Button.Size = UDim2.new(1, 0, 1, 0)
+Button.BackgroundTransparency = 1
+Button.Text = "Angular Mirage"
+Button.TextColor3 = Color3.new(1,1,1)
+Button.TextScaled = true
+Button.Font = Enum.Font.RobotoMono
+
+local isActive = false
+local conn
+local bv, bg, cam, hrp
+
+local function stopOrbit()
+    if bv then bv:Destroy() bv = nil end
+    if bg then bg:Destroy() bg = nil end
+    if cam then cam.CameraType = Enum.CameraType.Custom cam = nil end
+    if conn then conn:Disconnect() conn = nil end
+end
+
+local function startOrbit()
+    local player = game.Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+    hrp = character:WaitForChild("HumanoidRootPart")
+    cam = workspace.CurrentCamera
+
+    local radius = 10
+    local speed = 30000
+    local center = hrp.Position
+    local angle = 0
+    local camCFrame = cam.CFrame
+
+    cam.CameraType = Enum.CameraType.Scriptable
+
+    bv = Instance.new("BodyVelocity")
+    bv.MaxForce = Vector3.new(1e9, 0, 1e9)
+    bv.Parent = hrp
+
+    bg = Instance.new("BodyGyro")
+    bg.MaxTorque = Vector3.new(1e9, 1e9, 1e9)
+    bg.P = 1e6
+    bg.Parent = hrp
+
+    conn = game:GetService("RunService").Heartbeat:Connect(function(dt)
+        if not hrp or not hrp.Parent or not isActive then
+            stopOrbit()
+            return
+        end
+
+        -- Destroy all particles continuously
+        for _, part in ipairs(character:GetDescendants()) do
+            if part:IsA("ParticleEmitter") then
+                part:Destroy()
+            end
+        end
+
+        cam.CFrame = camCFrame
+        angle = angle + (speed / radius) * dt
+        local x = math.cos(angle) * radius
+        local z = math.sin(angle) * radius
+        local targetPos = Vector3.new(center.X + x, hrp.Position.Y, center.Z + z)
+        local tangent = Vector3.new(-math.sin(angle), 0, math.cos(angle))
+        hrp.CFrame = CFrame.new(targetPos, targetPos + tangent)
+        bv.Velocity = tangent * speed
+        bg.CFrame = CFrame.lookAt(hrp.Position, hrp.Position + tangent, Vector3.new(0, 1, 0))
+    end)
+end
+
+Button.MouseButton1Click:Connect(function()
+    isActive = not isActive
+    if isActive then
+        startOrbit()
+    else
+        stopOrbit()
+    end
+end)
+
+shared.resizeparticle = function(v848, v849, v850)
+    local v851 = v850 or "Size"
+    if v851 == "Speed" then
+        v848.Speed = NumberRange.new(v848.Speed.Min * v849, v848.Speed.Max * v849)
+    else
+        for _, v853 in pairs({v848}) do
+            local v854 = {}
+            for _, v856 in pairs(v853[v851].Keypoints) do
+                table.insert(v854, NumberSequenceKeypoint.new(v856.Time, v856.Value * v849, v856.Envelope))
+            end
+            v853[v851] = NumberSequence.new(v854)
+        end
+    end
+end
+
+local l_LocalPlayer_0 = game.Players.LocalPlayer
+local v1101 = {}
+v1101.char = l_LocalPlayer_0.Character or l_LocalPlayer_0.CharacterAdded:Wait()
+v1101.Hit = v1101.char
+v1101.hit = v1101.char
+v1101.Character = v1101.char
+v1101.Char = v1101.char
+v1101.Target = v1101.char
+
+local l_char_16 = v1101.char
+local l_PrimaryPart_25 = l_char_16.PrimaryPart
+local l_RootJoint_0 = l_PrimaryPart_25
+local l_Torso_7 = l_char_16:WaitForChild("HumanoidRootPart")
+local l_Bind_1 = v1101.Bind
+
+for _ = 1, 1 do
+    local l_l_char_16_0 = l_char_16
+    l_l_char_16_0.Archivable = true
+    local clone_char = l_l_char_16_0:Clone()
+    clone_char.Parent = workspace.Thrown
+
+    for _, v3870 in pairs(clone_char:GetDescendants()) do
+        if v3870:GetAttribute("EmoteProperty") then
+            v3870:Destroy()
+        end
+    end
+
+    local function _(v3871)
+        return Random.new():NextNumber(-v3871, v3871)
+    end
+
+    for _, v3874 in pairs(clone_char:GetDescendants()) do
+        if v3874:IsA("BasePart") then
+            v3874.CollisionGroup = "untouchable"
+            v3874.Transparency = math.clamp(0.8, v3874.Transparency, 2e9)
+            v3874.CanCollide = false
+            v3874.CanQuery = false
+            v3874.CanTouch = false
+            if v3874.Name:find("Head") then
+                v3874.Transparency = 1
+            end
+        elseif v3874:IsA("Sound") or v3874:IsA("Beam") or v3874:IsA("Trail") or v3874:IsA("Highlight") or v3874:IsA("BaseScript") or v3874:IsA("ParticleEmitter") or v3874:IsA("Fire") or v3874:IsA("Smoke") then
+            v3874:Destroy()
+        end
+    end
+
+    local v3875 = {}
+
+for _, v3877 in pairs({l_char_16, clone_char}) do
+    for _, v3879 in pairs({
+        "Left Leg","Right Leg","Left Arm","Right Arm","Torso","Head",
+        "LeftHand","RightHand","LeftLowerArm","RightLowerArm","LeftUpperArm","RightUpperArm",
+        "LeftFoot","RightFoot","LeftLowerLeg","RightLowerLeg","LeftUpperLeg","RightUpperLeg",
+        "UpperTorso","LowerTorso","Head"
+    }) do
+        local l_v3877_FirstChild_0 = v3877:FindFirstChild(v3879)
+        if l_v3877_FirstChild_0 then
+            for _, v3882 in pairs(game.ReplicatedStorage.Resources.Fast:GetChildren()) do
+                local v3883 = v3882:Clone()
+
+                    v3883.Parent = l_v3877_FirstChild_0
+                    if v3877 == l_char_16 then
+                        table.insert(v3875, v3883)
+                    else
+                        shared.resizeparticle(v3883, 2, "Transparency")
+                    end
+                end
+            end
+        end
+    end
+
+    clone_char.Name = ""
+    clone_char.Humanoid.DisplayName = ""
+end
+end)
+local dasher = game.ReplicatedStorage.Resources.CrabBeam.STart.dash.s1
+local player = game.Players.LocalPlayer
+local hrp = player.Character:WaitForChild("HumanoidRootPart")
+local HAHA
+
+local function StartFX()
+    HAHA = dasher:Clone()
+    HAHA.Parent = hrp
+
+    for _, child in ipairs(HAHA:GetChildren()) do
+        if child:IsA("ParticleEmitter") then
+            child.Color = ColorSequence.new(Color3.fromRGB(0, 255, 255)) -- cyan
+            child.Enabled = true
+        end
+    end
+end
+
+local function EndFX()
+    if HAHA then
+        for _, child in ipairs(HAHA:GetChildren()) do
+            if child:IsA("ParticleEmitter") then
+                child.Enabled = false
+            end
+        end
+        HAHA:Destroy()
+        HAHA = nil
+    end
+end
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Debris = game:GetService("Debris")
+local TweenService = game:GetService("TweenService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local player = Players.LocalPlayer
+local char = player.Character or player.CharacterAdded:Wait()
+local humanoid = char:WaitForChild("Humanoid")
+local bindPart = char:WaitForChild("HumanoidRootPart")
+
+local effect, secondary
+local tweens = {}
+local ended = false
+local conn
+
+local function EndBeam()
+
+local Test = game.ReplicatedStorage.Resources.KJEffects.DropkickExtra.drag.Attachment
+
+local test = Test:Clone()
+test.Position = test.Position + Vector3.new(0, -3, 0)  -- move down 3 studs
+test.Parent = game.Players.LocalPlayer.Character:WaitForChild("HumanoidRootPart")
+
+for _, child in ipairs(test:GetChildren()) do
+    if child:IsA("ParticleEmitter") then
+        child:Emit(15)
+        child.Enabled = false
+    end
+end
+
+    if ended then return end
+    ended = true
+
+    local tVal1 = Instance.new("NumberValue")
+    tVal1.Value = 0
+    local tVal2 = Instance.new("NumberValue")
+    tVal2.Value = 6
+
+    TweenService:Create(tVal1, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Value = 1}):Play()
+    TweenService:Create(tVal2, TweenInfo.new(2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Value = 0}):Play()
+
+    tVal1:GetPropertyChangedSignal("Value"):Connect(function()
+        if effect then
+            for _, beam in pairs(effect:GetDescendants()) do
+                if beam:IsA("Beam") then beam.Transparency = NumberSequence.new(tVal1.Value) end
+            end
+        end
+        if secondary then
+            for _, beam in pairs(secondary:GetDescendants()) do
+                if beam:IsA("Beam") then beam.Transparency = NumberSequence.new(tVal1.Value) end
+            end
+        end
+    end)
+
+    tVal2:GetPropertyChangedSignal("Value"):Connect(function()
+        if effect then
+            for _, beam in pairs(effect:GetDescendants()) do
+                if beam:IsA("Beam") then beam.TextureSpeed = tVal2.Value end
+            end
+        end
+        if secondary then
+            for _, beam in pairs(secondary:GetDescendants()) do
+                if beam:IsA("Beam") then beam.TextureSpeed = tVal2.Value end
+            end
+        end
+    end)
+
+    for _, tw in pairs(tweens) do
+        tw:Cancel()
+    end
+    tweens = {}
+
+    if effect then
+        Debris:AddItem(effect, 2)
+        task.delay(0.05, function()
+            for _, name in ipairs({"1111","2222","3333"}) do
+                local part = effect:FindFirstChild(name, true)
+                if part then part:Destroy() end
+            end
+        end)
+    end
+    if secondary then Debris:AddItem(secondary, 3) end
+
+    task.delay(0.9, function()
+        effect = nil
+        secondary = nil
+        ended = false
+    end)
+end
+
+local function StartEffect()
+    if effect then return end
+
+local Test = game.ReplicatedStorage.Resources.PinpointFinisher.GlintTime.Attachment
+
+local test = Test:Clone()
+test.Parent = game.Players.LocalPlayer.Character:WaitForChild("HumanoidRootPart")
+
+for _, child in ipairs(test:GetChildren()) do
+    if child:IsA("ParticleEmitter") then
+        child.Enabled = false
+    end
+end
+
+    effect = ReplicatedStorage.Resources.KJEffects.speedlinesandstuff:Clone()
+    effect.Parent = workspace.Thrown
+    secondary = effect:FindFirstChild("thespeedthingunderultik")
+    tweens = {}
+    ended = false
+    for _, p in pairs(effect:GetDescendants()) do
+        if p:IsA("ParticleEmitter") and p ~= secondary then
+            local tw = TweenService:Create(p, TweenInfo.new(0.95, Enum.EasingStyle.Quart, Enum.EasingDirection.InOut), {Rate = 900})
+            tw:Play()
+            task.delay(0.95, function()
+                local tw2 = TweenService:Create(p, TweenInfo.new(3.75, Enum.EasingStyle.Linear), {Rate = 0})
+                tw2:Play()
+                table.insert(tweens, tw2)
+            end)
+        end
+    end
+    conn = RunService.RenderStepped:Connect(function()
+        if bindPart and bindPart.Parent and not ended then
+            effect.CFrame = bindPart:GetPivot() * CFrame.new(-0.819, 6.15, -102.915)
+            if secondary then
+                secondary.CFrame = bindPart:GetPivot() * CFrame.new(-0.019, -2.95, 23.185)
+            end
+        else
+            EndBeam()
+            if conn then conn:Disconnect() end
+        end
+    end)
+end
+
+humanoid.Running:Connect(function(speed)
+    if speed > 0 then
+        StartEffect()
+    else
+        EndBeam()
+    end
+end)
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Debris = game:GetService("Debris")
+local player = Players.LocalPlayer
+local forwardDistance = 200
+local regularSpeed
+local bv
+local originalPos
+local camCFrame
+local enabled = false
+local cam = workspace.CurrentCamera
+local savedCFrame
+
+local character = player.Character or player.CharacterAdded:Wait()
+local root = character:WaitForChild("HumanoidRootPart")
+local humanoid = character:WaitForChild("Humanoid")
+
+local heartbeatConn
+local renderConn
+
+local function createGUI()
+    if player:FindFirstChild("PlayerGui") then
+        local existing = player.PlayerGui:FindFirstChild("SpeedMirageGUI")
+        if existing then existing:Destroy() end
+    end
+
+    regularSpeed = humanoid.WalkSpeed
+
+    local ScreenGui = Instance.new("ScreenGui")
+    ScreenGui.Name = "SpeedMirageGUI"
+    ScreenGui.Parent = player:WaitForChild("PlayerGui")
+    ScreenGui.ResetOnSpawn = false
+
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, 300, 0, 200)
+    frame.Position = UDim2.new(0, 10, 0, 10)
+    frame.BackgroundTransparency = 1
+    frame.Parent = ScreenGui
+
+    local bg = Instance.new("ImageLabel")
+    bg.Parent = frame
+    bg.Image = "rbxassetid://6803353442"
+    bg.BackgroundTransparency = 1
+    bg.ImageTransparency = 0.95
+    bg.ScaleType = Enum.ScaleType.Tile
+    bg.TileSize = UDim2.new(0,10,0,10)
+    bg.Size = UDim2.new(1,0,1,0)
+    bg.Position = UDim2.new(0,0,0,0)
+
+    local function createHolder(parent, posY, text)
+        local holder = Instance.new("Frame")
+        holder.Parent = parent
+        holder.Size = UDim2.new(0, 150, 0, 30)
+        holder.Position = UDim2.new(0, 10, 0, posY)
+        holder.BackgroundColor3 = Color3.fromRGB(33, 66, 132)
+        holder.BackgroundTransparency = 0.8
+        Instance.new("UICorner", holder)
+        local stroke = Instance.new("UIStroke", holder)
+        stroke.Color = Color3.fromRGB(33, 66, 132)
+        local label = Instance.new("TextLabel")
+        label.Parent = holder
+        label.Size = UDim2.new(1, 0, 1, 0)
+        label.BackgroundTransparency = 1
+        label.Text = text
+        label.TextColor3 = Color3.new(1,1,1)
+        label.TextScaled = true
+        label.Font = Enum.Font.RobotoMono
+        return holder, label
+    end
+
+    local SpeedHolder, SpeedLabel = createHolder(frame, 50, "SPS: 0")
+
+    local ButtonHolder = Instance.new("Frame")
+    ButtonHolder.Parent = frame
+    ButtonHolder.Size = UDim2.new(0, 120, 0, 30)
+    ButtonHolder.Position = UDim2.new(0, 10, 0, 10)
+    ButtonHolder.BackgroundColor3 = Color3.fromRGB(33, 66, 132)
+    ButtonHolder.BackgroundTransparency = 0.8
+    Instance.new("UICorner", ButtonHolder)
+    local buttonStroke = Instance.new("UIStroke", ButtonHolder)
+    buttonStroke.Color = Color3.fromRGB(33, 66, 132)
+
+    local Button = Instance.new("TextButton")
+    Button.Parent = ButtonHolder
+    Button.Size = UDim2.new(1, 0, 1, 0)
+    Button.BackgroundTransparency = 1
+    Button.Text = "Speed Mirage"
+    Button.TextColor3 = Color3.new(1,1,1)
+    Button.TextScaled = true
+    Button.Font = Enum.Font.RobotoMono
+
+    local ChangeSpeedHolder = Instance.new("Frame")
+    ChangeSpeedHolder.Parent = frame
+    ChangeSpeedHolder.Size = UDim2.new(0, 150, 0, 30)
+    ChangeSpeedHolder.Position = UDim2.new(0, 170, 0, 10)
+    ChangeSpeedHolder.BackgroundColor3 = Color3.fromRGB(33, 66, 132)
+    ChangeSpeedHolder.BackgroundTransparency = 0.8
+    Instance.new("UICorner", ChangeSpeedHolder)
+    local changeStroke = Instance.new("UIStroke", ChangeSpeedHolder)
+    changeStroke.Color = Color3.fromRGB(33, 66, 132)
+
+    local ChangeSpeedBox = Instance.new("TextBox")
+    ChangeSpeedBox.Parent = ChangeSpeedHolder
+    ChangeSpeedBox.Size = UDim2.new(1, 0, 1, 0)
+    ChangeSpeedBox.BackgroundTransparency = 1
+    ChangeSpeedBox.Text = "Change Speed"
+    ChangeSpeedBox.TextTransparency = 0.5
+    ChangeSpeedBox.TextColor3 = Color3.new(1,1,1)
+    ChangeSpeedBox.TextScaled = true
+    ChangeSpeedBox.Font = Enum.Font.RobotoMono
+    ChangeSpeedBox.ClearTextOnFocus = true
+
+    ChangeSpeedBox:GetPropertyChangedSignal("Text"):Connect(function()
+        if ChangeSpeedBox.Text == "" then
+            ChangeSpeedBox.TextTransparency = 0.5
+        else
+            ChangeSpeedBox.TextTransparency = 0
+        end
+    end)
+
+    local function SpeedMirageToggle(state)
+        enabled = state
+        if enabled then
+            cam.CameraType = Enum.CameraType.Scriptable
+            camCFrame = cam.CFrame
+            originalPos = root.Position
+            bv = Instance.new("BodyVelocity")
+            bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+            bv.Velocity = Vector3.new(0,0,0)
+            bv.Parent = root
+        else
+            cam.CameraType = Enum.CameraType.Custom
+            if bv then bv:Destroy() bv=nil end
+            humanoid.WalkSpeed = regularSpeed
+            if humanoid.MoveDirection.Magnitude > 0 then
+task.spawn(function()
+
+local Player = game:GetService("Players").LocalPlayer
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local Camera = workspace.CurrentCamera
+
+local Blur = Instance.new("BlurEffect")
+Blur.Size = 25
+Blur.Parent = game.Lighting
+TweenService:Create(Blur, TweenInfo.new(1), {Size = 0}):Play()
+
+local ColorCorrection = Instance.new("ColorCorrectionEffect")
+ColorCorrection.Saturation = -0.5
+ColorCorrection.Contrast = 2
+ColorCorrection.Parent = game.Lighting
+TweenService:Create(ColorCorrection, TweenInfo.new(1.5), {Saturation = 0, Contrast = 0}):Play()
+
+local Gui = Instance.new("ScreenGui")
+Gui.IgnoreGuiInset = true
+Gui.Parent = Player:WaitForChild("PlayerGui")
+local Frame = Instance.new("Frame", Gui)
+Frame.Size = UDim2.fromScale(1, 1)
+Frame.BackgroundColor3 = Color3.new(1, 1, 1)
+Frame.BackgroundTransparency = 0
+TweenService:Create(Frame, TweenInfo.new(0.5), {BackgroundTransparency = 1}):Play()
+task.delay(0.5, function() Gui:Destroy() end)
+
+local Particle = Instance.new("ParticleEmitter")
+Particle.Texture = "rbxassetid://243660364"
+Particle.Color = ColorSequence.new(Color3.fromRGB(0, 162, 255))
+Particle.LightEmission = 0.7
+Particle.Size = NumberSequence.new({NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(1, 0)})
+Particle.Lifetime = NumberRange.new(0.3, 0.5)
+Particle.Rate = 100
+Particle.Speed = NumberRange.new(0, 0)
+Particle.VelocitySpread = 10
+Particle.EmissionDirection = Enum.NormalId.Back
+Particle.Parent = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
+Particle.Enabled = true
+
+local StartTime = tick()
+local Duration = 4
+local MaxFOV = 125
+local NormalFOV = 70
+
+local connection
+connection = RunService.RenderStepped:Connect(function(delta)
+	local elapsed = tick() - StartTime
+	local progress = math.clamp(elapsed / Duration, 0, 1)
+	if progress >= 1 then
+		Camera.FieldOfView = Camera.FieldOfView + (NormalFOV - Camera.FieldOfView) * delta * 2
+	else
+		Camera.FieldOfView = Camera.FieldOfView + (MaxFOV - Camera.FieldOfView) * delta * 4
+	end
+	local shakeAmount = progress >= 1 and (1 - math.min((elapsed - Duration), 1)) or 1
+	Camera.CFrame = Camera.CFrame * CFrame.Angles(0, 0, math.rad(math.sin(tick() * 4) * 2 * shakeAmount))
+		* CFrame.new((math.random() - 0.5) * 2 * shakeAmount, (math.random() - 0.5) * 2 * shakeAmount, 0)
+		* CFrame.new(0, 0, -2 * shakeAmount)
+	if progress >= 2 then
+		connection:Disconnect()
+	end
+end)
+
+	sound:Play()
+	TweenService:Create(blur, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = 30}):Play()
+	TweenService:Create(colorCorrection, TweenInfo.new(0.3), {Brightness = -0.3, Contrast = 0.5, Saturation = -0.5}):Play()
+
+	task.wait(0.6)
+
+	TweenService:Create(blur, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = 0}):Play()
+	TweenService:Create(colorCorrection, TweenInfo.new(1), {Brightness = 0, Contrast = 0, Saturation = 0}):Play()
+end)
+                local boost = Instance.new("BodyVelocity")
+                boost.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+                boost.Velocity = root.CFrame.LookVector * 200
+                boost.Parent = root
+                Debris:AddItem(boost,0.5)
+            end
+        end
+    end
+
+    Button.MouseButton1Click:Connect(function()
+        local sound = Instance.new("Sound")
+        sound.SoundId = "rbxassetid://6493287948"
+        sound.Volume = 3
+        sound.Parent = character:WaitForChild("HumanoidRootPart")
+        sound:Play()
+        SpeedMirageToggle(not enabled)
+    end)
+
+    local BoostHolder = Instance.new("Frame")
+    BoostHolder.Parent = frame
+    BoostHolder.Size = UDim2.new(0, 120, 0, 30)
+    BoostHolder.Position = UDim2.new(0, 150, 0, 50)
+    BoostHolder.BackgroundColor3 = Color3.fromRGB(33, 66, 132)
+    BoostHolder.BackgroundTransparency = 0.8
+    Instance.new("UICorner", BoostHolder)
+    local boostStroke = Instance.new("UIStroke", BoostHolder)
+    boostStroke.Color = Color3.fromRGB(33, 66, 132)
+
+    local BoostButton = Instance.new("TextButton")
+    BoostButton.Parent = BoostHolder
+    BoostButton.Size = UDim2.new(1, 0, 1, 0)
+    BoostButton.BackgroundTransparency = 1
+    BoostButton.Text = "Boost"
+    BoostButton.TextColor3 = Color3.new(1,1,1)
+    BoostButton.TextScaled = true
+    BoostButton.Font = Enum.Font.RobotoMono
+
+    BoostButton.MouseButton1Click:Connect(function()
+
+local Camera = workspace.CurrentCamera
+
+local Sound = Instance.new("Sound")
+Sound.SoundId = "rbxassetid://5801257793"
+Sound.Volume = 3
+Sound.PlaybackSpeed = 1
+Sound.Parent = Camera
+Sound:Play()
+
+        local boost = Instance.new("BodyVelocity")
+        boost.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+        boost.Velocity = root.CFrame.LookVector * 10000
+        boost.Parent = root
+        Debris:AddItem(boost,0.5)
+    end)
+
+    local SaveHolder = Instance.new("Frame")
+    SaveHolder.Parent = frame
+    SaveHolder.Size = UDim2.new(0, 120, 0, 30)
+    SaveHolder.Position = UDim2.new(0, 10, 0, 90)
+    SaveHolder.BackgroundColor3 = Color3.fromRGB(33, 66, 132)
+    SaveHolder.BackgroundTransparency = 0.8
+    Instance.new("UICorner", SaveHolder)
+    local saveStroke = Instance.new("UIStroke", SaveHolder)
+    saveStroke.Color = Color3.fromRGB(33, 66, 132)
+
+    local SaveButton = Instance.new("TextButton")
+    SaveButton.Parent = SaveHolder
+    SaveButton.Size = UDim2.new(1, 0, 1, 0)
+    SaveButton.BackgroundTransparency = 1
+    SaveButton.Text = "Save Position"
+    SaveButton.TextColor3 = Color3.new(1,1,1)
+    SaveButton.TextScaled = true
+    SaveButton.Font = Enum.Font.RobotoMono
+
+    local LoadHolder = Instance.new("Frame")
+    LoadHolder.Parent = frame
+    LoadHolder.Size = UDim2.new(0, 120, 0, 30)
+    LoadHolder.Position = UDim2.new(0, 150, 0, 90)
+    LoadHolder.BackgroundColor3 = Color3.fromRGB(33, 66, 132)
+    LoadHolder.BackgroundTransparency = 0.8
+    Instance.new("UICorner", LoadHolder)
+    local loadStroke = Instance.new("UIStroke", LoadHolder)
+    loadStroke.Color = Color3.fromRGB(33, 66, 132)
+
+    local LoadButton = Instance.new("TextButton")
+    LoadButton.Parent = LoadHolder
+    LoadButton.Size = UDim2.new(1, 0, 1, 0)
+    LoadButton.BackgroundTransparency = 1
+    LoadButton.Text = "Load Position"
+    LoadButton.TextColor3 = Color3.new(1,1,1)
+    LoadButton.TextScaled = true
+    LoadButton.Font = Enum.Font.RobotoMono
+
+    SaveButton.MouseButton1Click:Connect(function()
+        savedCFrame = root.CFrame
+    end)
+
+    LoadButton.MouseButton1Click:Connect(function()
+        if savedCFrame then
+            root.CFrame = savedCFrame
+        end
+    end)
+
+    if heartbeatConn then heartbeatConn:Disconnect() end
+    if renderConn then renderConn:Disconnect() end
+
+    heartbeatConn = RunService.Heartbeat:Connect(function()
+        local val = tonumber(ChangeSpeedBox.Text)
+        if enabled then
+            humanoid.WalkSpeed = val or 300000
+            SpeedLabel.Text = "SPS: ∞"
+        else
+            humanoid.WalkSpeed = val or 30000000
+            local speed = math.floor(root.Velocity.Magnitude)
+            SpeedLabel.Text = "SPS: "..speed
+        end
+    end)
+
+    renderConn = RunService.RenderStepped:Connect(function()
+        if enabled and bv then
+            cam.CFrame = camCFrame
+            bv.Velocity = root.CFrame.LookVector * 3000
+            if (root.Position - originalPos).Magnitude >= forwardDistance then
+                root.CFrame = CFrame.new(originalPos)
+            end
+        end
+    end)
+end
+
+createGUI()
+player.CharacterAdded:Connect(function()
+end)
+local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
+
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+local cam = workspace.CurrentCamera
+
+local blur = Instance.new("BlurEffect")
+blur.Size = 0
+blur.Parent = cam
+
+local colorCorrection = Instance.new("ColorCorrectionEffect")
+colorCorrection.Brightness = 0
+colorCorrection.Contrast = 0
+colorCorrection.Saturation = 0
+colorCorrection.Parent = cam
+
+local sound = Instance.new("Sound")
+sound.SoundId = "rbxassetid://10457021115"
+sound.Volume = 0
+sound.Parent = character:WaitForChild("HumanoidRootPart")
+
+local triggered = false
+
+local function playEffects()
+
+local Player = game.Players.LocalPlayer
+local Character = Player.Character or Player.CharacterAdded:Wait()
+local HRP = Character:WaitForChild("HumanoidRootPart")
+
+local Player = game:GetService("Players").LocalPlayer
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local Camera = workspace.CurrentCamera
+
+local Sound = Instance.new("Sound")
+Sound.SoundId = "rbxassetid://5801257793"
+Sound.Volume = 3
+Sound.PlaybackSpeed = 1
+Sound.Parent = Camera
+Sound:Play()
+
+local Blur = Instance.new("BlurEffect")
+Blur.Size = 25
+Blur.Parent = game.Lighting
+TweenService:Create(Blur, TweenInfo.new(1), {Size = 0}):Play()
+
+local ColorCorrection = Instance.new("ColorCorrectionEffect")
+ColorCorrection.Saturation = -0.5
+ColorCorrection.Contrast = 2
+ColorCorrection.Parent = game.Lighting
+TweenService:Create(ColorCorrection, TweenInfo.new(1.5), {Saturation = 0, Contrast = 0}):Play()
+
+local Gui = Instance.new("ScreenGui")
+Gui.IgnoreGuiInset = true
+Gui.Parent = Player:WaitForChild("PlayerGui")
+local Frame = Instance.new("Frame", Gui)
+Frame.Size = UDim2.fromScale(1, 1)
+Frame.BackgroundColor3 = Color3.new(1, 1, 1)
+Frame.BackgroundTransparency = 0
+TweenService:Create(Frame, TweenInfo.new(0.5), {BackgroundTransparency = 1}):Play()
+task.delay(0.5, function() Gui:Destroy() end)
+
+local Particle = Instance.new("ParticleEmitter")
+Particle.Texture = "rbxassetid://243660364"
+Particle.Color = ColorSequence.new(Color3.fromRGB(0, 162, 255))
+Particle.LightEmission = 0.7
+Particle.Size = NumberSequence.new({NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(1, 0)})
+Particle.Lifetime = NumberRange.new(0.3, 0.5)
+Particle.Rate = 100
+Particle.Speed = NumberRange.new(0, 0)
+Particle.VelocitySpread = 10
+Particle.EmissionDirection = Enum.NormalId.Back
+Particle.Parent = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
+Particle.Enabled = true
+
+local StartTime = tick()
+local Duration = 4
+local MaxFOV = 125
+local NormalFOV = 70
+
+local connection
+connection = RunService.RenderStepped:Connect(function(delta)
+	local elapsed = tick() - StartTime
+	local progress = math.clamp(elapsed / Duration, 0, 1)
+	if progress >= 1 then
+		Camera.FieldOfView = Camera.FieldOfView + (NormalFOV - Camera.FieldOfView) * delta * 2
+	else
+		Camera.FieldOfView = Camera.FieldOfView + (MaxFOV - Camera.FieldOfView) * delta * 4
+	end
+	local shakeAmount = progress >= 1 and (1 - math.min((elapsed - Duration), 1)) or 1
+	Camera.CFrame = Camera.CFrame * CFrame.Angles(0, 0, math.rad(math.sin(tick() * 4) * 2 * shakeAmount))
+		* CFrame.new((math.random() - 0.5) * 2 * shakeAmount, (math.random() - 0.5) * 2 * shakeAmount, 0)
+		* CFrame.new(0, 0, -2 * shakeAmount)
+	if progress >= 2 then
+		connection:Disconnect()
+	end
+end)
+
+	sound:Play()
+	TweenService:Create(blur, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = 30}):Play()
+	TweenService:Create(colorCorrection, TweenInfo.new(0.3), {Brightness = -0.3, Contrast = 0.5, Saturation = -0.5}):Play()
+
+	task.wait(0.6)
+
+	TweenService:Create(blur, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Size = 0}):Play()
+	TweenService:Create(colorCorrection, TweenInfo.new(1), {Brightness = 0, Contrast = 0, Saturation = 0}):Play()
+end
+
+humanoid.Running:Connect(function(speed)
+	if speed >= 4000 then
+		if not triggered then
+			triggered = true
+			playEffects()
+		end
+	else
+		triggered = false
+	end
+end)
+
+local Lighting = game:GetService("Lighting")
+local Workspace = game:GetService("Workspace")
+local Players = game:GetService("Players")
+local l_LocalPlayer_0 = Players.LocalPlayer
+local v2 = l_LocalPlayer_0.Character or l_LocalPlayer_0.CharacterAdded:Wait()
+
+task.delay(0.5, function()
+    if not Lighting:FindFirstChild("Atmosphere") then
+        local atmosphere = Instance.new("Atmosphere")
+        atmosphere.Parent = Lighting
+    end
+    Lighting.Atmosphere.Density = 0.213
+end)
+
+local l_Humanoid_0 = v2.Humanoid
+local l_HumanoidRootPart_0 = v2.HumanoidRootPart
+local l_Head_0 = v2.Head
+
+local function _(v28, v29, v30)
+    return v28 + (v29 - v28) * v30
+end
+
+local function v33()
+    local fromRGB = Color3.fromRGB
+    Lighting.Ambient = fromRGB(138, 138, 138)
+    Lighting.Brightness = 2
+    Lighting.ColorShift_Bottom = fromRGB(53, 53, 53)
+    Lighting.ColorShift_Top = fromRGB(90, 90, 90)
+    Lighting.EnvironmentDiffuseScale = 0
+    Lighting.EnvironmentSpecularScale = 0
+    Lighting.GlobalShadows = true
+    Lighting.OutdoorAmbient = fromRGB(128, 128, 128)
+    Lighting.ClockTime = 12.302
+    Lighting.GeographicLatitude = -0.41
+    Lighting.ShadowSoftness = 0.2
+    Lighting.ExposureCompensation = 0
+end
+
+v33()
+
+local Sky = Lighting:FindFirstChildOfClass("Sky") or Instance.new("Sky", Lighting)
+Sky.SkyboxUp = "http://www.roblox.com/asset/?id=91458002"
+Sky.MoonTextureId = "rbxassetid://106784196573850"
+Sky.SkyboxBk = "http://www.roblox.com/asset/?id=91458024"
+Sky.SkyboxLf = "http://www.roblox.com/asset/?id=91458024"
+Sky.SkyboxFt = "http://www.roblox.com/asset/?id=91458024"
+Sky.SunTextureId = "rbxasset://sky/sun.jpg"
+Sky.SunAngularSize = 9
+Sky.SkyboxDn = "http://www.roblox.com/asset/?id=91457980"
+Sky.SkyboxRt = "http://www.roblox.com/asset/?id=91458024"
+Sky.MoonAngularSize = 25
+
+if Workspace.Terrain then
+    local Clouds = Workspace.Terrain:FindFirstChildOfClass("Clouds")
+    if Clouds then
+        Clouds:Destroy()
+    end
+    Clouds = Instance.new("Clouds", Workspace.Terrain)
+    Clouds.Cover = 0.7139999866485596
+    Clouds.Density = 0.2930000126361847
+end
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+local soundOnce = Instance.new("Sound")
+soundOnce.SoundId = "rbxassetid://2674547670"
+soundOnce.Volume = 3
+soundOnce.Parent = character:WaitForChild("HumanoidRootPart")
+local soundLoop = Instance.new("Sound")
+soundLoop.SoundId = "rbxassetid://9225850470"
+soundLoop.Volume = 3
+soundLoop.Looped = true
+soundLoop.Parent = character:WaitForChild("HumanoidRootPart")
+local triggered = false
+humanoid.Running:Connect(function(speed)
+    if speed == 4000 and not triggered then
+        triggered = true
+        soundOnce:Play()
+        soundLoop:Play()
+    elseif speed < 4000 and triggered then
+        triggered = false
+        soundLoop:Stop()
+    end
+end)
+
+local Player = game.Players.LocalPlayer
+local PlayerGui = Player:WaitForChild("PlayerGui")
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "PhaseUI"
+ScreenGui.Parent = PlayerGui
+ScreenGui.ResetOnSpawn = false
+
+-- Phase Button
+local PhaseHolder = Instance.new("Frame")
+PhaseHolder.Parent = ScreenGui
+PhaseHolder.Size = UDim2.new(0, 150, 0, 40)
+PhaseHolder.Position = UDim2.new(1, -160, 0, 10)
+PhaseHolder.BackgroundColor3 = Color3.fromRGB(33, 66, 132)
+PhaseHolder.BackgroundTransparency = 0.2
+Instance.new("UICorner", PhaseHolder)
+local phaseStroke = Instance.new("UIStroke", PhaseHolder)
+phaseStroke.Color = Color3.fromRGB(33, 66, 132)
+
+local PhaseButton = Instance.new("TextButton")
+PhaseButton.Parent = PhaseHolder
+PhaseButton.Size = UDim2.new(1, 0, 1, 0)
+PhaseButton.BackgroundTransparency = 1
+PhaseButton.Text = "Phase"
+PhaseButton.TextColor3 = Color3.new(1,1,1)
+PhaseButton.TextScaled = true
+PhaseButton.Font = Enum.Font.RobotoMono
+
+local phasing = false
+local phasingConn
+local PhaseSound
+
+PhaseButton.MouseButton1Click:Connect(function()
+    local Character = Player.Character or Player.CharacterAdded:Wait()
+    local HRP = Character:WaitForChild("HumanoidRootPart")
+
+    phasing = not phasing -- toggle state
+
+    if phasing then
+        PhaseSound = Instance.new("Sound")
+        PhaseSound.SoundId = "rbxassetid://4945948331"
+        PhaseSound.Volume = 2
+        PhaseSound.Looped = true
+        PhaseSound.Parent = HRP
+        PhaseSound:Play()
+
+        for _, part in pairs(Character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.Transparency = 0.3
+                part.CanCollide = false
+            end
+        end
+        HRP.Transparency = 1
+
+        phasingConn = game:GetService("RunService").Heartbeat:Connect(function()
+            if Character and HRP and phasing then
+                HRP.CFrame = HRP.CFrame * CFrame.Angles(
+                    math.rad(math.random(-5, 5)),
+                    math.rad(math.random(-5, 5)),
+                    math.rad(math.random(-5, 5))
+                )
+            end
+        end)
+    else
+        if phasingConn then
+            phasingConn:Disconnect()
+            phasingConn = nil
+        end
+        if PhaseSound then
+            PhaseSound:Stop()
+            PhaseSound:Destroy()
+        end
+        for _, part in pairs(Character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.CanCollide = true
+                part.Transparency = 0
+            end
+        end
+        HRP.Transparency = 1
+    end
+end)
+
+-- SuperLaunch Button
+local LaunchHolder = Instance.new("Frame")
+LaunchHolder.Parent = ScreenGui
+LaunchHolder.Size = UDim2.new(0, 150, 0, 40)
+LaunchHolder.Position = UDim2.new(1, -160, 0, 60)
+LaunchHolder.BackgroundColor3 = Color3.fromRGB(33, 66, 132)
+LaunchHolder.BackgroundTransparency = 0.2
+Instance.new("UICorner", LaunchHolder)
+local launchStroke = Instance.new("UIStroke", LaunchHolder)
+launchStroke.Color = Color3.fromRGB(33, 66, 132)
+
+local LaunchButton = Instance.new("TextButton")
+LaunchButton.Parent = LaunchHolder
+LaunchButton.Size = UDim2.new(1, 0, 1, 0)
+LaunchButton.BackgroundTransparency = 1
+LaunchButton.Text = "Super Launch"
+LaunchButton.TextColor3 = Color3.new(1,1,1)
+LaunchButton.TextScaled = true
+LaunchButton.Font = Enum.Font.RobotoMono
+
+LaunchButton.MouseButton1Click:Connect(function()
+task.spawn(function()
+
+local thrownFolder = workspace:FindFirstChild("Thrown")
+if not thrownFolder then
+    thrownFolder = Instance.new("Folder")
+    thrownFolder.Name = "Thrown"
+    thrownFolder.Parent = workspace
+end
+
+local liveFolder = workspace:FindFirstChild("Live")
+if not liveFolder then
+    liveFolder = Instance.new("Folder")
+    liveFolder.Name = "Live"
+    liveFolder.Parent = workspace
+end
+
+local function v717(v711) --[[ Line: 3797 ]]
+    -- upvalues: v472 (copy)
+    local l_orig_0 = v711.orig;
+    local l_dir_0 = v711.dir;
+    local v714 = RaycastParams.new();
+    local v472 = {
+    workspace.Live, 
+    workspace.Thrown
+};
+    v714.FilterDescendantsInstances = v711.Whitelist or v711.Ignore or v472;
+    if v711.Whitelist then
+        v714.FilterType = Enum.RaycastFilterType.Include;
+    else
+        v714.FilterType = Enum.RaycastFilterType.Exclude;
+    end;
+    if v711.Blockcast then
+        local v715 = workspace:Blockcast(l_orig_0, v711.Blockcast, l_dir_0, v714);
+        if v715 then
+            return v715.Instance, v715.Position, v715.Material, v715.Normal;
+        else
+            return;
+        end;
+    else
+        local v716 = workspace:Raycast(l_orig_0, l_dir_0, v714);
+        if v716 then
+            return v716.Instance, v716.Position, v716.Material, v716.Normal;
+        else
+            return;
+        end;
+    end;
+end;
+local v10 = game:GetService("TweenService")
+local function v102(v97, v98, v99, v100) --[[ Line: 322 ]]
+    -- upvalues: v95 (copy)
+    local v101 = v100 or v95;
+    if not v98 and v97 then
+        v98 = v97;
+        v97 = 1;
+    end;
+    if not v98 and not v97 then
+        v97 = 0;
+        v98 = 1;
+    end;
+    if not v99 then
+        return v101:NextNumber(v97, v98);
+    else
+        return v101:NextInteger(v97, v98);
+    end;
+end;
+shared.resizeparticle = function(v837, v838, v839) --[[ Line: 4191 ]]
+    local v840 = v839 or "Size";
+    if v840 == "Speed" then
+        v837.Speed = NumberRange.new(v837.Speed.Min * v838, v837.Speed.Max * v838);
+        return;
+    else
+        for _, v842 in pairs({
+            v837
+        }) do
+            local v843 = {};
+            for _, v845 in pairs(v842[v840].Keypoints) do
+                table.insert(v843, NumberSequenceKeypoint.new(v845.Time, v845.Value * v838, v845.Envelope));
+            end;
+            v842[v840] = NumberSequence.new(v843);
+        end;
+        return;
+    end;
+end;
+local v107 = {};
+local v294 = tick();
+local function v301() --[[ Line: 2083 ]]
+    -- upvalues: v294 (ref), v107 (copy)
+    if tick() - v294 > 300 then
+        v294 = tick();
+        local v295 = 0;
+        for _, v297 in pairs(workspace.Thrown:GetChildren()) do
+            if v297:IsA("Part") and v297:GetAttribute("Spawn") and not table.find(v107, v297) and not v297:GetAttribute("DeletionImmunity") and tick() - v297:GetAttribute("Spawn") > 60 then
+                v297:Destroy();
+                v295 = v295 + 1;
+            end;
+        end;
+        return;
+    else
+        local v298 = rawget(v107, 1);
+        if #v107 > 100 then
+            for _ = 101, #v107 do
+                local v300 = rawget(v107, 101);
+                table.remove(v107, 101);
+                if v300 then
+                    v300:Destroy();
+                end;
+            end;
+        end;
+        if v298 and not v298.Parent then
+            table.remove(v107, 1);
+        end;
+        if v298 and v298.Parent then
+            table.remove(v107, 1);
+            if v298.Name == "starterdeb" then
+                v298.Name = "aa";
+            end;
+            v298.CollisionGroup = "Default";
+            v298:SetAttribute("Spawn", tick());
+            return v298;
+        else
+            return;
+        end;
+    end;
+end;
+local function v327(v322, v323, v324) --[[ Line: 2202 ]]
+    local v325 = v322:Dot(v323);
+    local v326 = v322:Cross(v323);
+    if v325 < -0.99999 then
+        return CFrame.fromAxisAngle(v324, 3.141592653589793);
+    else
+        return CFrame.new(0, 0, 0, v326.x, v326.y, v326.z, 1 + v325);
+    end;
+end;
+local function v338(v332) --[[ Line: 2213 ]]
+    if not v332 then
+        return;
+    elseif v332.ClassName == "Model" then
+        return;
+    else
+        local v333 = v332.Touched:Connect(function() --[[ Line: 2216 ]]
+
+        end);
+        local l_v332_TouchingParts_0 = v332:GetTouchingParts();
+        v333:Disconnect();
+        local v335 = {};
+        for _, v337 in pairs(l_v332_TouchingParts_0) do
+            if v337.Name ~= "InvisibleBorder" and v337.Name ~= "InfBall" then
+                table.insert(v335, v337);
+            end;
+        end;
+        return v335;
+    end;
+end;
+            local function big(v1090)
+                local v21743 = v1090.num or 5;
+               local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local l_CFrame_68 = character:WaitForChild("HumanoidRootPart").CFrame
+
+                local v21745 = {};
+                local l_LegacyReplication_0 = game.ReplicatedStorage.Resources.LegacyReplication
+                local v21746 = Random.new(v1090.Seed);
+                local l_v102_1 = v102;
+                local l_l_v102_1_0 = l_v102_1 --[[ copy: 8 -> 714 ]];
+                local l_v21746_0 = v21746 --[[ copy: 7 -> 715 ]];
+                local function v21752(v21750, v21751) --[[ Line: 42439 ]]
+                    -- upvalues: l_l_v102_1_0 (copy), l_v21746_0 (copy)
+                    return l_l_v102_1_0(v21750, v21751, nil, l_v21746_0);
+                end;
+                local v21753, v21754, _, v21756 = v717({
+                    orig = l_CFrame_68.p, 
+                    dir = Vector3.new(0, -10, 0, 0)
+                });
+                if v21753 then
+                    local v21757 = l_LegacyReplication_0.CircleSmoke:Clone();
+                    v21757.Position = v21754;
+                    v21757.Attachment.UpSmoke.Color = ColorSequence.new(v21753.Color);
+                    shared.resizeparticle(v21757.Attachment.UpSmoke, 3);
+                    v21757.Parent = workspace.Thrown;
+                    local l_v21757_0 = v21757 --[[ copy: 14 -> 717 ]];
+                    task.delay(0, function() --[[ Line: 42454 ]]
+                        -- upvalues: l_v21757_0 (copy)
+                        l_v21757_0.Attachment.UpSmoke:Emit(60);
+                    end);
+                    local l_Part_20 = Instance.new("Part");
+                    l_Part_20.Anchored = true;
+                    l_Part_20.CanCollide = false;
+                    l_Part_20.CanTouch = false;
+                    l_Part_20.Size = Vector3.new(265, 25, 265, 0);
+                    l_Part_20.CanQuery = false;
+                    l_Part_20.Position = v21754 - Vector3.new(0, l_Part_20.Size.Y / 2 - 0.175, 0);
+                    l_Part_20.Transparency = 1;
+                    if v1090.Hunter then
+                        l_Part_20.Parent = workspace.Thrown;
+                        for _, v21761 in pairs(l_LegacyReplication_0.garcrack:GetChildren()) do
+                            local v21762 = v21761:Clone();
+                            v21762.Parent = l_Part_20;
+                            task.delay(4, function() --[[ Line: 42471 ]]
+                                -- upvalues: v10 (ref), v21762 (copy)
+                                v10:Create(v21762, TweenInfo.new(4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                                    Transparency = 1
+                                }):Play();
+                            end);
+                        end;
+                    end;
+                    local v21763 = l_LegacyReplication_0.HunterUlt:Clone();
+                    v21763.Position = v21754;
+                    v21763.Parent = workspace.Thrown;
+                    if v1090.Hunter then
+                        local l_v21763_0 = v21763 --[[ copy: 16 -> 721 ]];
+                        task.delay(0, function() --[[ Line: 42483 ]]
+                            -- upvalues: l_v21763_0 (copy)
+                            for _, v21766 in pairs(l_v21763_0:GetDescendants()) do
+                                if v21766:IsA("ParticleEmitter") then
+                                    v21766:Emit(v21766:GetAttribute("EmitCount"));
+                                end;
+                            end;
+                        end);
+                    end;
+                    local l_v21757_1 = v21757 --[[ copy: 14 -> 718 ]];
+                    local l_v21763_1 = v21763 --[[ copy: 16 -> 719 ]];
+                    local l_l_Part_20_0 = l_Part_20 --[[ copy: 15 -> 720 ]];
+                    task.delay(10, function() --[[ Line: 42491 ]]
+                        -- upvalues: l_v21757_1 (copy), l_v21763_1 (copy), l_l_Part_20_0 (copy)
+                        l_v21757_1:Destroy();
+                        l_v21763_1:Destroy();
+                        l_l_Part_20_0:Destroy();
+                    end);
+                end;
+                for v21770 = 1, v21743 do
+                    local v21771 = math.sin((360 / v21743 + 360 / v21743 * v21770) / 57.29577951308232);
+                    local v21772 = math.cos((360 / v21743 + 360 / v21743 * v21770) / 57.29577951308232);
+                    local v21773 = l_CFrame_68 + Vector3.new(2 * v21771, 0, 2 * v21772);
+                    local v21774 = nil;
+                    local v21775 = 1;
+                    local v21776 = 8;
+                    local v21777 = 15;
+                    local v21778 = v21746 or v95;
+                    if not v21777 and v21776 then
+                        v21777 = v21776;
+                        v21776 = 1;
+                    end;
+                    if not v21777 and not v21776 then
+                        v21776 = 0;
+                        v21777 = 1;
+                    end;
+                    for v21779 = v21775, v21778:NextNumber(v21776, v21777) do
+                        v21776 = v301() or Instance.new("Part");
+                        local v21780 = 0.3;
+                        local v21781 = 1;
+                        local v21782 = v21746 or v95;
+                        if not v21781 and v21780 then
+                            v21781 = v21780;
+                            v21780 = 1;
+                        end;
+                        if not v21781 and not v21780 then
+                            v21780 = 0;
+                            v21781 = 1;
+                        end;
+                        v21777 = v21782:NextNumber(v21780, v21781) * 2;
+                        if v1090.mult then
+                            v21777 = v21777 * v1090.mult;
+                        end;
+                        v21776.Size = Vector3.new(1, 1, 1, 0) * v21777;
+                        v21776.CFrame = v21773;
+                        v21776.Position = Vector3.new(v21776.Position.X, v21776.Position.Y, v21776.Position.Z);
+                        v21776.CFrame = CFrame.new(v21776.Position, (Vector3.new(l_CFrame_68.X, v21776.Position.Y, l_CFrame_68.Z)));
+                        v21776.CFrame = v21776.CFrame - v21776.CFrame.lookVector * (v21779 * 9);
+                        v21776.CollisionGroup = "nocol";
+                        v21774 = v21776.CFrame;
+                        v21778, v21780 = v717({
+                            orig = v21776.Position, 
+                            dir = Vector3.new(0, -7, 0, 0)
+                        });
+                        if not v21778 then
+                            v21776:Destroy();
+                        else
+                            if v21778 == workspace.Terrain then
+                                v21776.Material = Enum.Material.Sand;
+                                v21776.Color = Color3.fromRGB(227, 206, 157);
+                            else
+                                v21776.Color = v21778.Color;
+                                v21776.Material = v21778.Material;
+                            end;
+                            v21776:SetAttribute("CanGoThroughCamera", true);
+                            v21776.Anchored = false;
+                            v21776.CanCollide = true;
+                            local l_X_2 = v21776.Position.X;
+                            local v21784 = -3;
+                            local v21785 = 3;
+                            local v21786 = v21746 or v95;
+                            if not v21785 and v21784 then
+                                v21785 = v21784;
+                                v21784 = 1;
+                            end;
+                            if not v21785 and not v21784 then
+                                v21784 = 0;
+                                v21785 = 1;
+                            end;
+                            v21782 = l_X_2 + v21786:NextNumber(v21784, v21785);
+                            l_X_2 = v21780.Y;
+                            v21784 = v21776.Position.Z;
+                            v21786 = -3;
+                            local v21787 = 3;
+                            local v21788 = v21746 or v95;
+                            if not v21787 and v21786 then
+                                v21787 = v21786;
+                                v21786 = 1;
+                            end;
+                            if not v21787 and not v21786 then
+                                v21786 = 0;
+                                v21787 = 1;
+                            end;
+                            v21776.Position = Vector3.new(v21782, l_X_2, v21784 + v21788:NextNumber(v21786, v21787));
+                            v21781 = v21776.CFrame;
+                            v21782 = CFrame.Angles;
+                            v21784 = -360;
+                            v21785 = 360;
+                            v21786 = v21746 or v95;
+                            if not v21785 and v21784 then
+                                v21785 = v21784;
+                                v21784 = 1;
+                            end;
+                            if not v21785 and not v21784 then
+                                v21784 = 0;
+                                v21785 = 1;
+                            end;
+                            l_X_2 = math.rad((v21786:NextNumber(v21784, v21785)));
+                            v21785 = -360;
+                            v21786 = 360;
+                            v21787 = v21746 or v95;
+                            if not v21786 and v21785 then
+                                v21786 = v21785;
+                                v21785 = 1;
+                            end;
+                            if not v21786 and not v21785 then
+                                v21785 = 0;
+                                v21786 = 1;
+                            end;
+                            local v21789 = math.rad((v21787:NextNumber(v21785, v21786)));
+                            v21786 = -360;
+                            v21787 = 360;
+                            v21788 = v21746 or v95;
+                            if not v21787 and v21786 then
+                                v21787 = v21786;
+                                v21786 = 1;
+                            end;
+                            if not v21787 and not v21786 then
+                                v21786 = 0;
+                                v21787 = 1;
+                            end;
+                            v21776.CFrame = v21781 * v21782(l_X_2, v21789, (math.rad((v21788:NextNumber(v21786, v21787)))));
+                            v21781 = v21776.CFrame;
+                            v21776.Parent = workspace.Thrown;
+                            table.insert(v21745, v21776);
+                            l_X_2 = 1;
+                            v21789 = 2;
+                            v21784 = v21746 or v95;
+                            if not v21789 and l_X_2 then
+                                v21789 = l_X_2;
+                                l_X_2 = 1;
+                            end;
+                            if not v21789 and not l_X_2 then
+                                l_X_2 = 0;
+                                v21789 = 1;
+                            end;
+                            if v21784:NextNumber(l_X_2, v21789) == 1 then
+                                v21782 = Instance.new("Attachment");
+                                v21782.Parent = workspace.Terrain;
+                                v21782.WorldPosition = v21780;
+                                l_X_2 = l_LegacyReplication_0.UpSmoke:Clone();
+                                l_X_2.Parent = v21782;
+                                l_X_2.Color = ColorSequence.new(v21778.Color);
+                                l_X_2.Lifetime = NumberRange.new(4, 6);
+                                l_X_2.Acceleration = Vector3.new(0, -2, 0, 0);
+                                l_X_2.Speed = NumberRange.new(0, v21752(100, 200));
+                                shared.resizeparticle(l_X_2, v21752(1, 6));
+                                l_X_2:Emit(11);
+                                game:service("Debris"):AddItem(v21782, 10);
+                            end;
+                            v21782 = Instance.new("BodyVelocity");
+                            v21782.MaxForce = Vector3.new(40000, 40000, 40000, 0);
+                            v21785 = -4;
+                            v21786 = 4;
+                            v21787 = v21746 or v95;
+                            if not v21786 and v21785 then
+                                v21786 = v21785;
+                                v21785 = 1;
+                            end;
+                            if not v21786 and not v21785 then
+                                v21785 = 0;
+                                v21786 = 1;
+                            end;
+                            v21784 = v21787:NextNumber(v21785, v21786);
+                            v21786 = 3;
+                            v21787 = 32;
+                            v21788 = v21746 or v95;
+                            if not v21787 and v21786 then
+                                v21787 = v21786;
+                                v21786 = 1;
+                            end;
+                            if not v21787 and not v21786 then
+                                v21786 = 0;
+                                v21787 = 1;
+                            end;
+                            v21789 = Vector3.new(v21784, v21788:NextNumber(v21786, v21787), v21752(-4, 4, true));
+                            v21785 = 3;
+                            v21786 = 4;
+                            v21787 = v21746 or v95;
+                            if not v21786 and v21785 then
+                                v21786 = v21785;
+                                v21785 = 1;
+                            end;
+                            if not v21786 and not v21785 then
+                                v21785 = 0;
+                                v21786 = 1;
+                            end;
+                            v21782.Velocity = v21789 * v21787:NextNumber(v21785, v21786);
+                            v21782.Parent = v21776;
+                            game:service("Debris"):AddItem(v21782, 0.15);
+                        end;
+                    end;
+                end;
+                local l_v21745_0 = v21745 --[[ copy: 6 -> 716 ]];
+                task.delay(6, function() --[[ Line: 42568 ]]
+                    -- upvalues: l_v21745_0 (copy)
+                    for _, v21792 in pairs(l_v21745_0) do
+                        v21792.Anchored = false;
+                        v21792.CanCollide = false;
+                    end;
+                    task.wait(2);
+                    for _, v21794 in pairs(l_v21745_0) do
+                        v21794:Destroy();
+                    end;
+                end);
+                for v21795 = 1, 6 do
+                    local v21796 = 3 + v21795 * 17;
+                    local v21797 = 3 + v21795 * 17;
+                    local v21798 = {
+                        ground = v21753, 
+                        cframe = CFrame.new(v21754), 
+                        normal = v21756, 
+                        amount = 10 + v21795
+                    };
+                    for v21799 = 1, v21798.amount do
+                        local v21800 = v301() or Instance.new("Part");
+                        v21800.CFrame = v21798.cframe;
+                        local v21801 = v327(v21800.CFrame.UpVector, v21798.normal, (Vector3.new(0, 1, 0, 0)));
+                        v21800.CFrame = v21800.CFrame * (v21801 * CFrame.new(0, -0.9, 0));
+                        local _ = v21798.cframe * v21801 * CFrame.Angles(1.5707963267948966, 0, 0);
+                        local l_CFrame_69 = v21800.CFrame;
+                        local v21804 = l_CFrame_69 * CFrame.Angles(0, math.rad(35 * v21799), 0) * CFrame.new(0, 1, v21752(v21796, v21797));
+                        local l_Angles_35 = CFrame.Angles;
+                        local v21806 = -30;
+                        local v21807 = -15;
+                        local v21808 = v21746 or v95;
+                        if not v21807 and v21806 then
+                            v21807 = v21806;
+                            v21806 = 1;
+                        end;
+                        if not v21807 and not v21806 then
+                            v21806 = 0;
+                            v21807 = 1;
+                        end;
+                        local v21809 = math.rad((v21808:NextNumber(v21806, v21807)));
+                        v21807 = 0;
+                        v21808 = 1;
+                        local v21810 = v21746 or v95;
+                        if not v21808 and v21807 then
+                            v21808 = v21807;
+                            v21807 = 1;
+                        end;
+                        if not v21808 and not v21807 then
+                            v21807 = 0;
+                            v21808 = 1;
+                        end;
+                        local v21811 = math.rad((v21810:NextNumber(v21807, v21808)));
+                        v21808 = 0;
+                        v21810 = 1;
+                        local v21812 = v21746 or v95;
+                        if not v21810 and v21808 then
+                            v21810 = v21808;
+                            v21808 = 1;
+                        end;
+                        if not v21810 and not v21808 then
+                            v21808 = 0;
+                            v21810 = 1;
+                        end;
+                        local v21813 = v21804 * l_Angles_35(v21809, v21811, (math.rad((v21812:NextNumber(v21808, v21810)))));
+                        v21804 = (v21813.p - v21798.cframe.p).magnitude;
+                        v21800.Name = "DebrisCrack";
+                        v21800.Anchored = true;
+                        v21800.Color = v21798.ground.Color;
+                        v21800.CanCollide = false;
+                        v21800.Name = v21799;
+                        v21800.Material = v21798.ground.Material;
+                        v21806 = 2;
+                        v21807 = 8;
+                        v21808 = v21746 or v95;
+                        if not v21807 and v21806 then
+                            v21807 = v21806;
+                            v21806 = 1;
+                        end;
+                        if not v21807 and not v21806 then
+                            v21806 = 0;
+                            v21807 = 1;
+                        end;
+                        v21811 = v21808:NextNumber(v21806, v21807);
+                        v21807 = 1;
+                        v21808 = 2;
+                        v21810 = v21746 or v95;
+                        if not v21808 and v21807 then
+                            v21808 = v21807;
+                            v21807 = 1;
+                        end;
+                        if not v21808 and not v21807 then
+                            v21807 = 0;
+                            v21808 = 1;
+                        end;
+                        v21800.Size = Vector3.new(v21811, v21810:NextNumber(v21807, v21808), v21752(1, 3)) * (1.3 + v21795 * 0.7);
+                        v21811 = -10;
+                        v21806 = 10;
+                        v21807 = v21746 or v95;
+                        if not v21806 and v21811 then
+                            v21806 = v21811;
+                            v21811 = 1;
+                        end;
+                        if not v21806 and not v21811 then
+                            v21811 = 0;
+                            v21806 = 1;
+                        end;
+                        v21813 = v21813 + Vector3.new(v21807:NextNumber(v21811, v21806), 0, v21752(-10, 10)) - Vector3.new(0, v21800.Size.Y / 8, 0);
+                        l_Angles_35 = CFrame.new(v21813.p, l_CFrame_68.p);
+                        v21809 = CFrame.Angles;
+                        v21807 = -30;
+                        v21808 = -15;
+                        v21810 = v21746 or v95;
+                        if not v21808 and v21807 then
+                            v21808 = v21807;
+                            v21807 = 1;
+                        end;
+                        if not v21808 and not v21807 then
+                            v21807 = 0;
+                            v21808 = 1;
+                        end;
+                        v21811 = math.rad((v21810:NextNumber(v21807, v21808)));
+                        v21808 = 0;
+                        v21810 = 1;
+                        v21812 = v21746 or v95;
+                        if not v21810 and v21808 then
+                            v21810 = v21808;
+                            v21808 = 1;
+                        end;
+                        if not v21810 and not v21808 then
+                            v21808 = 0;
+                            v21810 = 1;
+                        end;
+                        v21806 = math.rad((v21812:NextNumber(v21808, v21810)));
+                        v21810 = 0;
+                        v21812 = 1;
+                        local v21814 = v21746 or v95;
+                        if not v21812 and v21810 then
+                            v21812 = v21810;
+                            v21810 = 1;
+                        end;
+                        if not v21812 and not v21810 then
+                            v21810 = 0;
+                            v21812 = 1;
+                        end;
+                        v21813 = l_Angles_35 * v21809(v21811, v21806, (math.rad((v21814:NextNumber(v21810, v21812)))));
+                        v21800.CFrame = v21813;
+                        v21800.Transparency = 1;
+                        v21800.Parent = workspace.Thrown;
+                        v21800.AssemblyLinearVelocity = Vector3.new(0, 0, 0, 0);
+                        v21800.AssemblyAngularVelocity = Vector3.new(0, 0, 0, 0);
+                        v21800.Velocity = Vector3.new(0, 0, 0, 0);
+                        l_Angles_35 = nil;
+                        v21809 = v338(v21800);
+                        v21811 = {};
+                        v21806 = nil;
+                        v21807 = nil;
+                        for _, v21816 in pairs(v21809) do
+                            if not v21816:IsDescendantOf(workspace.Live) and v21816.Parent ~= workspace.Thrown then
+                                if v21816.Material ~= v21798.ground.Material then
+                                    l_Angles_35 = v21816;
+                                end;
+                                table.insert(v21811, v21816);
+                            end;
+                            if v21816 == v21798.ground then
+                                v21806 = v21798.ground;
+                            end;
+                            if v21816.Name == "Stadium" then
+                                v21807 = true;
+                            end;
+                        end;
+                        if #v21811 == 0 or not v21798.ground.Anchored then
+                            v21800.Transparency = 1;
+                        else
+                            if l_Angles_35 and (not v21806 or v21806.Name ~= "Stadium") and (not v21807 or v21798.ground.Name ~= "Stadium") then
+                                v21800.Color = l_Angles_35.Color;
+                                v21800.Material = l_Angles_35.Material;
+                            end;
+                            v21800.CFrame = l_CFrame_69;
+                            v21800.Transparency = v21798.ground.Transparency;
+                        end;
+                        if v21800.Transparency >= 1 then
+                            v21800.CanCollide = false;
+                            v21800.CanTouch = false;
+                            v21800.CanQuery = false;
+                        end;
+                        v21808 = v21800.CFrame;
+                        v21814 = CFrame.Angles;
+                        local v21817 = -1;
+                        local v21818 = 1;
+                        local v21819 = v21746 or v95;
+                        if not v21818 and v21817 then
+                            v21818 = v21817;
+                            v21817 = 1;
+                        end;
+                        if not v21818 and not v21817 then
+                            v21817 = 0;
+                            v21818 = 1;
+                        end;
+                        local v21820 = math.rad((v21819:NextNumber(v21817, v21818)));
+                        local v21821 = math.rad(v21798.amount * v21799);
+                        v21819 = -1;
+                        local v21822 = 1;
+                        local v21823 = v21746 or v95;
+                        if not v21822 and v21819 then
+                            v21822 = v21819;
+                            v21819 = 1;
+                        end;
+                        if not v21822 and not v21819 then
+                            v21819 = 0;
+                            v21822 = 1;
+                        end;
+                        v21812 = v21814(v21820, v21821, (math.rad((v21823:NextNumber(v21819, v21822))))) * CFrame.new(0, 1, v21752(2, 4));
+                        v21814 = CFrame.Angles;
+                        v21817 = -30;
+                        v21818 = -15;
+                        v21819 = v21746 or v95;
+                        if not v21818 and v21817 then
+                            v21818 = v21817;
+                            v21817 = 1;
+                        end;
+                        if not v21818 and not v21817 then
+                            v21817 = 0;
+                            v21818 = 1;
+                        end;
+                        v21820 = math.rad((v21819:NextNumber(v21817, v21818)));
+                        v21818 = 0;
+                        v21819 = 1;
+                        v21822 = v21746 or v95;
+                        if not v21819 and v21818 then
+                            v21819 = v21818;
+                            v21818 = 1;
+                        end;
+                        if not v21819 and not v21818 then
+                            v21818 = 0;
+                            v21819 = 1;
+                        end;
+                        v21821 = math.rad((v21822:NextNumber(v21818, v21819)));
+                        v21819 = 0;
+                        v21822 = 1;
+                        v21823 = v21746 or v95;
+                        if not v21822 and v21819 then
+                            v21822 = v21819;
+                            v21819 = 1;
+                        end;
+                        if not v21822 and not v21819 then
+                            v21819 = 0;
+                            v21822 = 1;
+                        end;
+                        v21800.CFrame = v21808 * (v21812 * v21814(v21820, v21821, (math.rad((v21823:NextNumber(v21819, v21822))))));
+                        do
+                            local l_v21813_0 = v21813;
+                            spawn(function() --[[ Line: 42661 ]]
+                                -- upvalues: v21800 (copy), l_v21813_0 (ref), v21746 (copy), v95 (ref), v21798 (copy), v10 (ref)
+                                v21800.CFrame = l_v21813_0 - Vector3.new(0, v21800.Size.Y / 2, 0);
+                                local l_v21800_0 = v21800;
+                                local l_CFrame_70 = l_v21800_0.CFrame;
+                                local l_Angles_36 = CFrame.Angles;
+                                local v21828 = -35;
+                                local v21829 = 35;
+                                local v21830 = v21746 or v95;
+                                if not v21829 and v21828 then
+                                    v21829 = v21828;
+                                    v21828 = 1;
+                                end;
+                                if not v21829 and not v21828 then
+                                    v21828 = 0;
+                                    v21829 = 1;
+                                end;
+                                local v21831 = math.rad((v21830:NextNumber(v21828, v21829)));
+                                v21829 = -35;
+                                local v21832 = 35;
+                                local v21833 = v21746 or v95;
+                                if not v21832 and v21829 then
+                                    v21832 = v21829;
+                                    v21829 = 1;
+                                end;
+                                if not v21832 and not v21829 then
+                                    v21829 = 0;
+                                    v21832 = 1;
+                                end;
+                                local v21834 = math.rad((v21833:NextNumber(v21829, v21832)));
+                                v21832 = -35;
+                                v21830 = 35;
+                                local v21835 = v21746 or v95;
+                                if not v21830 and v21832 then
+                                    v21830 = v21832;
+                                    v21832 = 1;
+                                end;
+                                if not v21830 and not v21832 then
+                                    v21832 = 0;
+                                    v21830 = 1;
+                                end;
+                                l_v21800_0.CFrame = l_CFrame_70 * l_Angles_36(v21831, v21834, (math.rad((v21835:NextNumber(v21832, v21830)))));
+                                wait(0.03);
+                                if v21800.Anchored then
+                                    if v21798.sand then
+                                        l_v21800_0 = Instance.new("BodyVelocity");
+                                        l_v21800_0.MaxForce = Vector3.new(2000000000, 2000000000, 2000000000, 0);
+                                        l_Angles_36 = v21800.CFrame.lookVector;
+                                        v21828 = 22;
+                                        v21829 = 32;
+                                        v21830 = v21746 or v95;
+                                        if not v21829 and v21828 then
+                                            v21829 = v21828;
+                                            v21828 = 1;
+                                        end;
+                                        if not v21829 and not v21828 then
+                                            v21828 = 0;
+                                            v21829 = 1;
+                                        end;
+                                        l_v21800_0.Velocity = l_Angles_36 * -v21830:NextNumber(v21828, v21829);
+                                        l_CFrame_70 = l_v21800_0.Velocity;
+                                        v21831 = 0;
+                                        v21828 = 35;
+                                        v21829 = 82;
+                                        v21830 = v21746 or v95;
+                                        if not v21829 and v21828 then
+                                            v21829 = v21828;
+                                            v21828 = 1;
+                                        end;
+                                        if not v21829 and not v21828 then
+                                            v21828 = 0;
+                                            v21829 = 1;
+                                        end;
+                                        l_v21800_0.Velocity = l_CFrame_70 + Vector3.new(v21831, v21830:NextNumber(v21828, v21829), 0);
+                                        l_v21800_0.Parent = v21800;
+                                        v21800.Anchored = false;
+                                        game:GetService("Debris"):AddItem(l_v21800_0, 0.15);
+                                        v10:Create(v21800, TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                                            Size = v21800.Size / 1.25
+                                        }):Play();
+                                        v10:Create(v21800, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                                            CFrame = l_v21813_0
+                                        }):Play();
+                                    else
+                                        l_v21800_0 = v10;
+                                        l_Angles_36 = v21800;
+                                        v21831 = TweenInfo.new;
+                                        v21828 = 0.2;
+                                        v21829 = 0.3;
+                                        v21830 = v21746 or v95;
+                                        if not v21829 and v21828 then
+                                            v21829 = v21828;
+                                            v21828 = 1;
+                                        end;
+                                        if not v21829 and not v21828 then
+                                            v21828 = 0;
+                                            v21829 = 1;
+                                        end;
+                                        l_v21800_0:Create(l_Angles_36, v21831(v21830:NextNumber(v21828, v21829), Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                                            CFrame = l_v21813_0, 
+                                            Size = v21800.Size * 1
+                                        }):Play();
+                                    end;
+                                    task.delay(0.2, function() --[[ Line: 42688 ]]
+                                        -- upvalues: v21800 (ref), v21798 (ref)
+                                        v21800.CanCollide = v21798.sand or true;
+                                        if v21800.Transparency >= 1 then
+                                            v21800.CanCollide = false;
+                                            v21800.CanTouch = false;
+                                            v21800.CanQuery = false;
+                                        end;
+                                    end);
+                                end;
+                            end);
+                            v21808 = delay;
+                            v21812 = 5;
+                            v21814 = 7;
+                            v21820 = v21746 or v95;
+                            if not v21814 and v21812 then
+                                v21814 = v21812;
+                                v21812 = 1;
+                            end;
+                            if not v21814 and not v21812 then
+                                v21812 = 0;
+                                v21814 = 1;
+                            end;
+                            v21808(v21820:NextNumber(v21812, v21814), function() --[[ Line: 42699 ]]
+                                -- upvalues: v10 (ref), v21800 (copy), v21746 (copy), v95 (ref), v107 (ref)
+                                local l_v10_34 = v10;
+                                local l_v21800_1 = v21800;
+                                local v21838 = TweenInfo.new(2, Enum.EasingStyle.Quad, Enum.EasingDirection.In);
+                                local v21839 = {};
+                                local v21840 = v21800.CFrame * CFrame.new(0, -7, 0);
+                                local l_Angles_37 = CFrame.Angles;
+                                local v21842 = -25;
+                                local v21843 = 25;
+                                local v21844 = v21746 or v95;
+                                if not v21843 and v21842 then
+                                    v21843 = v21842;
+                                    v21842 = 1;
+                                end;
+                                if not v21843 and not v21842 then
+                                    v21842 = 0;
+                                    v21843 = 1;
+                                end;
+                                local v21845 = math.rad((v21844:NextNumber(v21842, v21843)));
+                                v21843 = -25;
+                                local v21846 = 25;
+                                local v21847 = v21746 or v95;
+                                if not v21846 and v21843 then
+                                    v21846 = v21843;
+                                    v21843 = 1;
+                                end;
+                                if not v21846 and not v21843 then
+                                    v21843 = 0;
+                                    v21846 = 1;
+                                end;
+                                local v21848 = math.rad((v21847:NextNumber(v21843, v21846)));
+                                v21846 = -25;
+                                v21844 = 25;
+                                local v21849 = v21746 or v95;
+                                if not v21844 and v21846 then
+                                    v21844 = v21846;
+                                    v21846 = 1;
+                                end;
+                                if not v21844 and not v21846 then
+                                    v21846 = 0;
+                                    v21844 = 1;
+                                end;
+                                v21839.CFrame = v21840 * l_Angles_37(v21845, v21848, (math.rad((v21849:NextNumber(v21846, v21844)))));
+                                v21839.Size = v21800.Size / 1.5;
+                                l_v10_34:Create(l_v21800_1, v21838, v21839):Play();
+                                wait(2);
+                                v21800.Anchored = true;
+                                v21800.CFrame = CFrame.new(100000000, 100000000, 100000000);
+                                table.insert(v107, v21800);
+                            end);
+                        end;
+                    end;
+                end;
+                end
+big({Hunter = true, CFrame = CFrame.new(153, 441, 33, -1, 0, -0, 0, 1, 0, 0, 0, -1), Seed = 1723738993})
+end)
+
+local ids = {
+    "rbxassetid://12396291693",
+    "rbxassetid://12396291220",
+    "rbxassetid://12396291580",
+    "rbxassetid://4307204452",
+    "rbxassetid://4307208601",
+    "rbxassetid://3848076724"
+}
+
+for _, id in ipairs(ids) do
+    local s = Instance.new("Sound")
+    s.SoundId = id
+    s.Parent = workspace
+    s:Play()
+end
+
+    local Character = Player.Character or Player.CharacterAdded:Wait()
+    local HRP = Character:WaitForChild("HumanoidRootPart")
+
+    local bv = Instance.new("BodyVelocity")
+    bv.Velocity = Vector3.new(0, 500, 0) -- huge upward launch
+    bv.MaxForce = Vector3.new(0, 1e5, 0)
+    bv.Parent = HRP
+
+    -- Remove the BodyVelocity after 0.5 seconds so physics resumes naturally
+    game:GetService("Debris"):AddItem(bv, 0.5)
+end)
+
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+
+local function setupRunningSound(character)
+    local humanoid = character:WaitForChild("Humanoid")
+    local rootPart = character:FindFirstChild("HumanoidRootPart") or character.PrimaryPart
+    local runSound = Instance.new("Sound")
+    runSound.SoundId = "rbxassetid://4944377949"
+    runSound.Volume = 0.3
+    runSound.Looped = true
+    runSound.Parent = rootPart
+
+    spawn(function()
+        while humanoid.Parent do
+            if humanoid.MoveDirection.Magnitude > 0 then
+                if not runSound.IsPlaying then
+                    runSound:Play()
+                end
+            else
+                if runSound.IsPlaying then
+                    runSound:Stop()
+                end
+            end
+            wait(0.1)
+        end
+    end)
+end
+
+if player.Character then
+    setupRunningSound(player.Character)
+end
+player.CharacterAdded:Connect(setupRunningSound)
