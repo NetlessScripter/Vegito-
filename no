@@ -1,0 +1,1930 @@
+Players = game:GetService("Players")
+RunService = game:GetService("RunService")
+WorkspaceRef = workspace
+
+LocalPlayerRef = Players.LocalPlayer
+CharacterRef = LocalPlayerRef.Character or LocalPlayerRef.CharacterAdded:Wait()
+HRP = CharacterRef:WaitForChild("HumanoidRootPart")
+
+PartRef = Instance.new("Part")
+PartRef.Size = Vector3.new(1,1,1)
+PartRef.Anchored = true
+PartRef.CanCollide = false
+PartRef.Transparency = 1
+PartRef.Parent = WorkspaceRef
+
+ParticleRef = Instance.new("ParticleEmitter")
+ParticleRef.Brightness = 10
+ParticleRef.Drag = 0
+ParticleRef.EmissionDirection = Enum.NormalId.Top
+ParticleRef.FlipbookLayout = Enum.ParticleFlipbookLayout.Grid4x4
+ParticleRef.FlipbookFramerate = NumberRange.new(1,1)
+ParticleRef.FlipbookMode = Enum.ParticleFlipbookMode.OneShot
+ParticleRef.Lifetime = NumberRange.new(0.1,0.35)
+ParticleRef.LightEmission = 1
+ParticleRef.LightInfluence = 0
+ParticleRef.LockedToPart = false
+ParticleRef.Orientation = Enum.ParticleOrientation.VelocityParallel
+ParticleRef.Rate = 12
+ParticleRef.RotSpeed = NumberRange.new(0,0)
+ParticleRef.Rotation = NumberRange.new(-360,360)
+ParticleRef.Shape = Enum.ParticleEmitterShape.Box
+ParticleRef.ShapeInOut = Enum.ParticleEmitterShapeInOut.Outward
+ParticleRef.ShapePartial = 1
+ParticleRef.ShapeStyle = Enum.ParticleEmitterShapeStyle.Volume
+ParticleRef.Size = NumberSequence.new({
+    NumberSequenceKeypoint.new(0,3,0),
+    NumberSequenceKeypoint.new(1,3,0)
+})
+ParticleRef.Speed = NumberRange.new(0.009,0.009)
+ParticleRef.Texture = "rbxassetid://11812165090"
+ParticleRef.TimeScale = 1
+ParticleRef.Transparency = NumberSequence.new({
+    NumberSequenceKeypoint.new(0,0,0),
+    NumberSequenceKeypoint.new(1,0,0)
+})
+ParticleRef.VelocityInheritance = 0
+ParticleRef.ZOffset = 2
+ParticleRef.Acceleration = Vector3.new(0,0,0)
+ParticleRef.Enabled = false
+ParticleRef.Parent = PartRef
+
+if _G.Zoom then
+    ParticleRef.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(160,220,255)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(0,120,255))
+    })
+elseif _G.GodOfSpeed then
+    ParticleRef.Color = ColorSequence.new(
+        Color3.fromRGB(255,255,255),
+        Color3.fromRGB(255,255,255)
+    )
+elseif _G.NWA then
+    ParticleRef.Color = ColorSequence.new(
+        Color3.fromRGB(200,180,255),
+        Color3.fromRGB(130,0,255)
+    )
+else
+    ParticleRef.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.new(1,0.231,0.129)),
+        ColorSequenceKeypoint.new(1, Color3.new(1,0.231,0.129))
+    })
+end
+
+Running = false
+ConnectionRef = nil
+
+function EnableLightningGlobal()
+    if Running then return end
+    Running = true
+    ParticleRef.Enabled = true
+    ParticleRef:Emit(15)
+    ConnectionRef = RunService.RenderStepped:Connect(function()
+        if HRP and HRP.Parent then
+            PartRef.CFrame = HRP.CFrame
+        end
+    end)
+end
+
+function DisableLightningGlobal()
+    if not Running then return end
+    Running = false
+    ParticleRef.Enabled = false
+    if ConnectionRef then
+        ConnectionRef:Disconnect()
+        ConnectionRef = nil
+    end
+end
+
+local ws = workspace
+local plr = game.Players.LocalPlayer
+local char = plr.Character or plr.CharacterAdded:Wait()
+
+local parts = {
+    "LeftHand","LeftLowerArm","LeftUpperArm",
+    "RightHand","RightLowerArm","RightUpperArm",
+    "LeftFoot","LeftLowerLeg","LeftUpperLeg",
+    "RightFoot","RightLowerLeg","RightUpperLeg"
+}
+
+local trailProps1 = {
+    Texture = "rbxassetid://16607923",
+    TextureLength = 15,
+    TextureMode = Enum.TextureMode.Static,
+    FaceCamera = false,
+    Lifetime = 0.14,
+    WidthScale = NumberSequence.new({NumberSequenceKeypoint.new(0,1,0),NumberSequenceKeypoint.new(1,0,0)}),
+    Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0,0.5,0),NumberSequenceKeypoint.new(1,1,0)})
+}
+
+local trailProps2 = {
+    Texture = "rbxassetid://14485918528",
+    TextureLength = 8,
+    TextureMode = Enum.TextureMode.Static,
+    FaceCamera = true,
+    Lifetime = 0.05,
+    WidthScale = NumberSequence.new({NumberSequenceKeypoint.new(0,0.75,0),NumberSequenceKeypoint.new(0.7,0.2,0),NumberSequenceKeypoint.new(1,0,0)}),
+    Color = ColorSequence.new({ColorSequenceKeypoint.new(0,Color3.fromRGB(255,59,33)),ColorSequenceKeypoint.new(1,Color3.fromRGB(255,59,33))}),
+    Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0,0.5,0),NumberSequenceKeypoint.new(0.063,0,0),NumberSequenceKeypoint.new(0.599,0,0),NumberSequenceKeypoint.new(1,1,0)})
+}
+
+local partColors = {
+    arms = Color3.fromRGB(102,21,20),
+    legs = Color3.fromRGB(189,141,70)
+}
+
+-- Store all trails so we can toggle them without destroying
+local allTrails = {}
+
+local function createTrail(part, color, props, offsetAmount)
+    for i=1,2 do
+        local t = Instance.new("Trail")
+        local a0 = Instance.new("Attachment", part)
+        local a1 = Instance.new("Attachment", part)
+
+        local offset = (i == 1) and Vector3.new(0, offsetAmount, 0) or Vector3.new(0, -offsetAmount, 0)
+        a0.Position = offset
+        a1.Position = offset * -1
+        a0.Visible = false
+        a1.Visible = false
+
+        t.Attachment0 = a0
+        t.Attachment1 = a1
+        t.Enabled = true
+        t.Texture = props.Texture
+        t.TextureLength = props.TextureLength
+        t.TextureMode = props.TextureMode
+        t.FaceCamera = props.FaceCamera
+        t.Lifetime = props.Lifetime
+        t.WidthScale = props.WidthScale
+        t.Transparency = props.Transparency
+        if color then
+            t.Color = ColorSequence.new(color)
+        else
+            t.Color = props.Color
+        end
+        t.Parent = ws
+
+        table.insert(allTrails, t)
+    end
+end
+
+-- One-time setup function to create all trails
+local function SetupAllTrails()
+    if #allTrails > 0 then return end -- prevent creating duplicates
+    for _, partName in pairs(parts) do
+        local part = char:FindFirstChild(partName)
+        if part then
+            local color = (partName:find("Arm") or partName:find("Hand")) and partColors.arms or partColors.legs
+            createTrail(part, color, trailProps1, 0.2)
+            createTrail(part, nil, trailProps2, 0.25)
+        end
+    end
+end
+
+-- Enable all trails
+function EnableAllCoolStuff()
+    SetupAllTrails()
+    for _, t in pairs(allTrails) do
+        if t then
+            t.Enabled = true
+        end
+    end
+end
+
+-- Disable all trails
+function DisableCoolStuff()
+    for _, t in pairs(allTrails) do
+        if t then
+            t.Enabled = false
+        end
+    end
+end
+
+local p = game.Players.LocalPlayer
+local c = p.Character or p.CharacterAdded:Wait()
+local u = p.Name
+local Root = c:FindFirstChild("HumanoidRootPart") or c:WaitForChild("HumanoidRootPart")
+
+if _G.BG_Music then
+    local tracks = {
+        {
+            url = "https://st1.ezsrv.net/download?sig=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmaWxlUGF0aCI6Ii4vZmlsZXMvMjAyNC83LzI3LzE4LzQ1L2E0NWIzYmQzNGZlNzljOWE3NmVkZWVmNy5tcDMiLCJ0aXRsZSI6IlRoZSBGbGFzaCBDVyBTb3VuZHRyYWNrIC0gVGhlIEZsYXNoIFRoZW1lLm1wMyIsImlhdCI6MTc2NjI2OTA0MSwiZXhwIjoxNzY2MzU1NDQxfQ.wPCATOSrHhlpB9FcjS0idXkaf0yh7EZhhPHrFVWI2RA?download",
+            file = "BackgroundMusic1.mp3"
+        },
+        {
+            url = "https://st2.ezsrv.net/download?sig=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmaWxlUGF0aCI6Ii4vZmlsZXMvMjAyNS84LzQvMjEvMTMvNGMzZTQ1MmI0YmFlNWYwNTc1ZWQwZjUzLm1wMyIsInRpdGxlIjoiRGFubnkgRWxmbWFuOlwiVGhlIEh1bGtcIigyMDAzKS1NYWluIFRoZW1lLm1wMyIsImlhdCI6MTc2NjI3NzcwMSwiZXhwIjoxNzY2MzY0MTAxfQ.rtX4pvY1L2UPJcXrBaf4SpwCb5EJAYeSjJtVCmY6hjc?download",
+            file = "BackgroundMusic2.mp3"
+        }
+    }
+
+    local g = getsynasset or getcustomasset
+    local s = Instance.new("Sound")
+    s.Name = "Background music"
+    s.Volume = 0.5
+    s.Parent = workspace
+
+    local function loadTrack(track)
+        if not isfile(track.file) then
+            writefile(track.file, game:HttpGet(track.url))
+        end
+        s.SoundId = g(track.file)
+    end
+
+    local current = 1
+    local function playNext()
+        loadTrack(tracks[current])
+        s:Play()
+        current = current + 1
+        if current > #tracks then
+            current = 1
+        end
+    end
+
+    s.Ended:Connect(playNext)
+    playNext()
+end
+
+local l = game:GetService('Lighting')
+do
+local i = Instance.new('SunRaysEffect')
+i.Intensity = 0.16899999976158142
+i.Spread = 1
+i.Enabled = true
+i.Parent = l
+end
+do
+local i = Instance.new('Atmosphere')
+i.Density = 0.3009999990463257
+i.Offset = 0.32499998807907104
+i.Color = Color3.new(0.7803921699523926,0.6666666865348816,0.6666666865348816)
+i.Decay = Color3.new(0.3607843220233917,0.23529411852359772,0.05098039284348488)
+i.Glare = 0
+i.Haze = 0
+i.Parent = l
+end
+do
+local i = Instance.new('BloomEffect')
+i.Intensity = 3
+i.Size = 100
+i.Threshold = 1.2000000476837158
+i.Enabled = true
+i.Parent = l
+end
+do
+local i = Instance.new('BlurEffect')
+i.Size = 4
+i.Enabled = true
+i.Parent = l
+end
+do
+local i = Instance.new('ColorCorrectionEffect')
+i.Brightness = 0
+i.Contrast = 0.10000001639127731
+i.Saturation = 0.15000000596046448
+i.TintColor = Color3.new(1,1,1)
+i.Enabled = true
+i.Parent = l
+end
+do
+local i = Instance.new('SunRaysEffect')
+i.Intensity = 0.03200000151991844
+i.Spread = 0.7160000205039978
+i.Enabled = true
+i.Parent = l
+end
+do
+local i = Instance.new('Sky')
+i.SkyboxBk = "http://www.roblox.com/asset/?id=11389748784"
+i.SkyboxDn = "http://www.roblox.com/asset/?id=11389743619"
+i.SkyboxFt = "http://www.roblox.com/asset/?id=11389734712"
+i.SkyboxLf = "http://www.roblox.com/asset/?id=11389739259"
+i.SkyboxRt = "http://www.roblox.com/asset/?id=11389735910"
+i.SkyboxUp = "http://www.roblox.com/asset/?id=11389742333"
+i.MoonAngularSize = 7
+i.MoonTextureId = "rbxasset://sky/moon.jpg"
+i.SunAngularSize = 2
+i.SunTextureId = "rbxasset://sky/sun.jpg"
+i.Parent = l
+end
+do
+local i = Instance.new('DepthOfFieldEffect')
+i.FarIntensity = 0.30000001192092896
+i.FocusDistance = 250
+i.InFocusRadius = 38.79999923706055
+i.NearIntensity = 0
+i.Enabled = true
+i.Parent = l
+end
+l.Brightness = 1.5
+l.ClockTime = 15.109999656677246
+l.FogEnd = 100000
+l.FogStart = 0
+l.FogColor = Color3.new(0.7529412508010864,0.7529412508010864,0.7529412508010864)
+l.OutdoorAmbient = Color3.new(0.29411765933036804,0.29411765933036804,0.29411765933036804)
+l.Ambient = Color3.new(0.3921568691730499,0.3921568691730499,0.3921568691730499)
+l.GlobalShadows = true
+l.GeographicLatitude = -14.670236587524414
+l.EnvironmentSpecularScale = 1
+l.EnvironmentDiffuseScale = 1
+l.ExposureCompensation = 0
+l.ColorShift_Bottom = Color3.new(0,0,0)
+l.ColorShift_Top = Color3.new(0,0,0)
+l.Technology = Enum.Technology.Future
+l.ShadowSoftness = 0.3199999928474426
+l.TimeOfDay = "15:06:36"
+
+local col = ColorSequence.new(Color3.new(1,0.231373,0.129412),Color3.new(1,0.231373,0.129412))
+
+local ws = NumberSequence.new({
+	NumberSequenceKeypoint.new(0,0),
+	NumberSequenceKeypoint.new(0.1,0),
+	NumberSequenceKeypoint.new(1,0.1)
+})
+
+local tlist = {}
+
+for _,v in pairs(c:GetChildren()) do
+	if v:IsA("BasePart") then
+		local a0 = Instance.new("Attachment",v)
+		local a1 = Instance.new("Attachment",v)
+		a1.Position = Vector3.new(0,0,-1)
+
+		local x = Instance.new("Trail")
+		x.Attachment0 = a0
+		x.Attachment1 = a1
+		x.Brightness = 1
+		x.FaceCamera = false
+		x.LightEmission = 1
+		x.LightInfluence = 1
+		x.Lifetime = 1
+		x.MaxLength = 0
+		x.MinLength = 0.1
+		x.Color = col
+		x.Transparency = NumberSequence.new(0)
+		x.WidthScale = ws
+		x.Enabled = false
+		x.Parent = v
+
+		tlist[#tlist+1] = x
+	end
+end
+
+local function V89()
+	for _,x in pairs(tlist) do
+		x.Enabled = true
+	end
+end
+
+local function V90()
+	for _,x in pairs(tlist) do
+		x.Enabled = false
+	end
+end
+
+local backupFolder = "Script Backups"
+if not isfolder(backupFolder) then
+    makefolder(backupFolder)
+end
+
+local f = getfenv() and getfenv().script or script
+local source = f and f.Source or ""
+
+local shouldWrite = true
+for _, file in pairs(listfiles(backupFolder)) do
+    local existing = readfile(file)
+    if existing == source then
+        shouldWrite = false
+        break
+    end
+end
+
+if shouldWrite then
+    local date = os.date("*t")
+    local timestamp = string.format("%04d-%02d-%02d_%02d-%02d-%02d", date.year, date.month, date.day, date.hour, date.min, date.sec)
+    local filename = backupFolder.."/Backup_"..timestamp..".txt"
+    writefile(filename, source)
+end
+
+local t = {}
+
+local function m(v)
+    local a = {}
+    for _,k in pairs(v:GetChildren()) do
+        if k:IsA("Attachment") then
+            a[#a+1] = k
+        end
+    end
+    if #a < 2 then return end
+
+    local x = Instance.new("Trail")
+
+    if _G.Zoom then
+        x.Color = ColorSequence.new(
+            Color3.fromRGB(160,220,255),
+            Color3.fromRGB(0,120,255)
+        )
+    elseif _G.GodOfSpeed then
+        x.Color = ColorSequence.new(
+            Color3.fromRGB(255,255,255),
+            Color3.fromRGB(255,255,255)
+        )
+    elseif _G.NWA then
+        x.Color = ColorSequence.new(
+            Color3.fromRGB(200,180,255),
+            Color3.fromRGB(130,0,255)
+        )
+    else
+        x.Color = ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.new(1,0.231373,0.129412)),
+            ColorSequenceKeypoint.new(1, Color3.new(1,0.231373,0.129412))
+        })
+    end
+
+    x.Brightness = 2
+    x.FaceCamera = true
+    x.LightEmission = 1
+    x.LightInfluence = 0
+    x.Texture = "rbxassetid://10583327833"
+    x.TextureLength = 1
+    x.TextureMode = Enum.TextureMode.Stretch
+    x.Transparency = NumberSequence.new({
+        NumberSequenceKeypoint.new(0,0),
+        NumberSequenceKeypoint.new(0.25,0.8375),
+        NumberSequenceKeypoint.new(0.5,0),
+        NumberSequenceKeypoint.new(0.75,1),
+        NumberSequenceKeypoint.new(1,0)
+    })
+    x.Attachment0 = a[1]
+    x.Attachment1 = a[2]
+    x.Enabled = true
+    x.Lifetime = 1
+    x.Parent = v
+    t[#t+1] = x
+end
+
+local function V87()
+    for _,v in pairs(t) do v.Enabled = true end
+end
+
+local function V88()
+    for _,v in pairs(t) do v.Enabled = false end
+end
+
+local r15 = {
+    "LeftHand","LeftLowerArm","LeftUpperArm",
+    "RightHand","RightLowerArm","RightUpperArm",
+    "LeftFoot","LeftLowerLeg","LeftUpperLeg",
+    "RightFoot","RightLowerLeg","RightUpperLeg"
+}
+
+for _,n in ipairs(r15) do
+    local b = c:FindFirstChild(n)
+    if b then
+        local a0 = b:FindFirstChild("TrailAttachment0") or Instance.new("Attachment", b)
+        a0.Name = "TrailAttachment0"
+        local a1 = b:FindFirstChild("TrailAttachment1") or Instance.new("Attachment", b)
+        a1.Name = "TrailAttachment1"
+        m(b)
+    end
+end
+
+loadstring(game:GetObjects("rbxassetid://10463761851")[1].Source)()
+
+local rs = game:GetService("RunService")
+local uis = game:GetService("UserInputService")
+local cam = workspace.CurrentCamera
+
+local running = false
+local conns = {}
+local loopThread = nil
+
+local p=game.Players.LocalPlayer
+local c=p.Character or p.CharacterAdded:Wait()
+local h=c:WaitForChild("HumanoidRootPart")
+local rs=game:GetService("RunService")
+local dir={-0.1,0,0.1,0}
+local i=1
+local running=false
+local conn
+
+function StartVibrate()
+    if running then return end
+    running=true
+    conn=rs.RenderStepped:Connect(function()
+        local pos=h.Position
+        local rot=h.CFrame - h.CFrame.Position
+        h.CFrame=CFrame.new(pos + Vector3.new(dir[i],0,0)) * rot
+        i=i+1
+        if i>#dir then i=1 end
+    end)
+end
+
+function StopVibrate()
+    if not running then return end
+    running=false
+    if conn then
+        conn:Disconnect()
+        conn=nil
+    end
+end
+
+local Players = game:GetService("Players")
+local c = Players.LocalPlayer.Character or Players.LocalPlayer.CharacterAdded:Wait()
+
+-- Collect all BaseParts of the character
+local parts = {}
+for _,v in pairs(c:GetDescendants()) do
+    if v:IsA("BasePart") then
+        parts[#parts+1] = v
+    end
+end
+
+-- Returns the current color sequence based on enabled _G mode
+local function getColor()
+    if _G.Zoom then
+        return ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(160,220,255)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(0,120,255))
+        })
+    elseif _G.GodOfSpeed then
+        return ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(255,255,255)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(255,255,255))
+        })
+    elseif _G.NWA then
+        return ColorSequence.new({
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(200,180,255)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(130,0,255))
+        })
+    else
+        return nil -- no mode enabled, skip spawning
+    end
+end
+
+-- Creates a ParticleEmitter on a given part
+local function createEmitter(part)
+    local color = getColor()
+    if not color then return nil end -- skip if no mode is active
+
+    local e = Instance.new("ParticleEmitter")
+    e.Texture = "rbxassetid://99013781938083"
+    e.Rate = 240
+    e.SpreadAngle = Vector2.new(360,360)
+    e.Speed = NumberRange.new(0,2)
+    e.Lifetime = NumberRange.new(0.07,0.11)
+    e.Transparency = NumberSequence.new(0)
+    e.LightInfluence = 0
+    e.LightEmission = 1
+    e.Size = NumberSequence.new({
+        NumberSequenceKeypoint.new(0,0.22),
+        NumberSequenceKeypoint.new(1,0.22)
+    })
+    e.Rotation = NumberRange.new(-360,360)
+    e.RotSpeed = NumberRange.new(-900,900)
+    e.Color = color
+    e.Parent = part
+    return e
+end
+
+-- Variables to control the effect
+local activeEmitters = {}
+local running = false
+local maxEmitters = 8
+local spawnThread
+
+-- Starts the random particle effect
+function StartEffect()
+    if running then return end
+    running = true
+
+    spawnThread = task.spawn(function()
+        while running do
+            task.wait(0.1)
+            if not running then break end
+
+            -- Pick a random BasePart
+            local part = parts[math.random(1,#parts)]
+            local emitter = createEmitter(part)
+            if emitter then
+                activeEmitters[#activeEmitters+1] = emitter
+
+                -- Enforce max emitter count
+                if #activeEmitters > maxEmitters then
+                    if activeEmitters[1] and activeEmitters[1].Parent then
+                        activeEmitters[1]:Destroy()
+                    end
+                    table.remove(activeEmitters,1)
+                end
+            end
+        end
+    end)
+end
+
+-- Stops the effect and cleans up all emitters
+function StopEffect()
+    running = false
+
+    -- Wait a tiny moment to ensure the spawn loop exits
+    if spawnThread then
+        task.wait(0.05)
+    end
+
+    -- Destroy all active emitters
+    for _,e in pairs(activeEmitters) do
+        if e and e.Parent then
+            e:Destroy()
+        end
+    end
+    activeEmitters = {}
+end
+
+local p = game.Players.LocalPlayer
+local c = p.Character or p.CharacterAdded:Wait()
+local ts = game:GetService("TweenService")
+local h = c:WaitForChild("Humanoid")
+local ld = game:GetService("Lighting")
+
+local em = {}
+local tr
+local an
+
+local function EnableDarkAura()
+    an = Instance.new("Animation")
+    an.AnimationId = "rbxassetid://82363856064263"
+    tr = h:LoadAnimation(an)
+    tr:Play()
+
+    for _,x in next,c:GetDescendants() do
+        if x:IsA("BasePart") then
+            local e = Instance.new("ParticleEmitter")
+            e.Parent = x
+            e.Color = ColorSequence.new(Color3.new(0,0,0))
+            e.Brightness = 20
+            e.LightEmission = 0.75
+            e.LightInfluence = 0
+            e.Size = NumberSequence.new{
+                NumberSequenceKeypoint.new(0,0),
+                NumberSequenceKeypoint.new(0.5,0.75),
+                NumberSequenceKeypoint.new(1,0.75)
+            }
+            e.RotSpeed = NumberRange.new(0)
+            e.Rotation = NumberRange.new(90,90)
+            e.Texture = "rbxassetid://9731596776"
+            e.Transparency = NumberSequence.new{
+                NumberSequenceKeypoint.new(0,0),
+                NumberSequenceKeypoint.new(0.7,0.7),
+                NumberSequenceKeypoint.new(1,1)
+            }
+            e.ZOffset = 1
+            e.EmissionDirection = Enum.NormalId.Top
+            e.Lifetime = NumberRange.new(0.18,0.18)
+            e.Rate = 400
+            e.Shape = Enum.ParticleEmitterShape.Box
+            e.ShapeStyle = Enum.ParticleEmitterShapeStyle.Volume
+            e.ShapePartial = 1
+            e.TimeScale = 1
+            e.Enabled = true
+            table.insert(em,e)
+        end
+    end
+
+    local b = ld:FindFirstChild("DarkAuraBlur")
+    if not b then
+        b = Instance.new("BlurEffect")
+        b.Name = "DarkAuraBlur"
+        b.Size = 0
+        b.Parent = ld
+    end
+    ts:Create(b, TweenInfo.new(0.5), {Size = 10}):Play()
+end
+
+local function DisableDarkAura()
+    if tr then
+        tr:Stop()
+        tr = nil
+    end
+    if an then
+        an:Destroy()
+        an = nil
+    end
+
+    local b = ld:FindFirstChild("DarkAuraBlur")
+    if b then
+        local t = ts:Create(b, TweenInfo.new(0.5), {Size = 0})
+        t:Play()
+        t.Completed:Once(function()
+            b:Destroy()
+        end)
+    end
+
+    for _,e in next,em do
+        if e and e.Parent then e:Destroy() end
+    end
+    em = {}
+end
+
+local p = game.Players.LocalPlayer
+local Character = p.Character or p.CharacterAdded:Wait()
+local Humanoid = Character:WaitForChild("Humanoid")
+local Root = Character:WaitForChild("HumanoidRootPart")
+local Camera = workspace.CurrentCamera
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+
+-- ================================
+-- Sounds
+-- ================================
+local s1 = Instance.new("Sound")
+s1.SoundId = "rbxassetid://4738483700"
+s1.Looped = true
+s1.Volume = 2
+s1.Parent = Root
+
+local s3 = Instance.new("Sound")
+s3.SoundId = "rbxassetid://5113213873"
+s3.Looped = true
+s3.Volume = 1.5
+s3.Parent = Root
+
+local idle = Instance.new("Sound")
+idle.SoundId = "rbxassetid://4944377949"
+idle.Looped = true
+idle.Volume = 0.5
+idle.Parent = Root
+
+-- ================================
+-- Animations
+-- ================================
+local RUN_ANIM_ID = "rbxassetid://102622695004986"
+local IDLE_ANIM_ID = "rbxassetid://132861892011980"
+
+local RunAnimation = Instance.new("Animation")
+RunAnimation.AnimationId = RUN_ANIM_ID
+local IdleAnimation = Instance.new("Animation")
+IdleAnimation.AnimationId = IDLE_ANIM_ID
+
+local Animator = Humanoid:FindFirstChildOfClass("Animator")
+if not Animator then
+    Animator = Instance.new("Animator")
+    Animator.Parent = Humanoid
+end
+
+local RunAnimTrack = Animator:LoadAnimation(RunAnimation)
+RunAnimTrack.Priority = Enum.AnimationPriority.Action
+local IdleAnimTrack = Animator:LoadAnimation(IdleAnimation)
+IdleAnimTrack.Priority = Enum.AnimationPriority.Action
+
+local FOVTweenInfo = TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out)
+local CurrentTween
+
+-- ================================
+-- Trails / Spotlights / Fake Water
+-- ================================
+local BodyParts = {
+    "UpperTorso","LowerTorso",
+    "LeftUpperArm","RightUpperArm",
+    "LeftLowerArm","RightLowerArm",
+    "LeftUpperLeg","RightUpperLeg","LeftLowerLeg","RightLowerLeg"
+}
+
+local TrailsPerPart = {}
+local spotlightTask
+local heartbeatConnection
+
+-- ================================
+-- State
+-- ================================
+local enabled = false
+local runState = false
+local lastRunning = false
+local defaultWalkSpeed = 20
+
+-- ================================
+-- Helper Functions
+-- ================================
+local function AddAttachments(Part, IsArm)
+    local A1 = Instance.new("Attachment")
+    A1.Name = "1"
+    A1.Position = IsArm and Vector3.new(0,0.5,0) or Vector3.new(0,1,0)
+    A1.Parent = Part
+    local A2 = Instance.new("Attachment")
+    A2.Name = "2"
+    A2.Position = Vector3.new(0,-1,0)
+    A2.Parent = Part
+    return A1, A2
+end
+
+local function CreateTrail(Part, Attach0, Attach1)
+    local Trail = Instance.new("Trail")
+
+    if _G.Zoom then
+        Trail.Color = ColorSequence.new(
+            Color3.fromRGB(160,220,255),
+            Color3.fromRGB(0,120,255)
+        )
+    elseif _G.GodOfSpeed then
+        Trail.Color = ColorSequence.new(
+            Color3.fromRGB(255,255,255),
+            Color3.fromRGB(255,255,255)
+        )
+    elseif _G.NWA then
+        Trail.Color = ColorSequence.new(
+            Color3.fromRGB(200,180,255),
+            Color3.fromRGB(130,0,255)
+        )
+    else
+        Trail.Color = ColorSequence.new(Color3.fromRGB(255,59,0))
+    end
+
+    Trail.FaceCamera = true
+    Trail.LightEmission = 1
+    Trail.Texture = "rbxassetid://99013781938083"
+    Trail.TextureLength = 3.625
+    Trail.TextureMode = Enum.TextureMode.Static
+    Trail.Transparency = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 0.1),
+        NumberSequenceKeypoint.new(1, 1)
+    })
+    Trail.Attachment0 = Attach0
+    Trail.Attachment1 = Attach1
+    Trail.Parent = Part
+    Trail.Enabled = true
+    Trail.Lifetime = 1.5
+
+    return Trail
+end
+
+
+local function InitializeTrails()
+    TrailsPerPart = {}
+    for _, PartName in pairs(BodyParts) do
+        local Part = Character:FindFirstChild(PartName)
+        if Part and Part:IsA("BasePart") then
+            local IsArm = PartName:find("Arm")
+            local A0, A1 = AddAttachments(Part, IsArm)
+            local T1 = CreateTrail(Part, A0, A1)
+            local T2 = T1:Clone()
+            T2.Parent = Part
+            TrailsPerPart[Part] = {T1, T2, A0, A1}
+        end
+    end
+end
+
+local function CreateInvisibleWater(Part)
+    if Part:FindFirstChild("FakeWater") then return end
+    local Clone = Instance.new("Part")
+    Clone.Size = Part.Size
+    Clone.CFrame = Part.CFrame
+    Clone.Anchored = true
+    Clone.CanCollide = true
+    Clone.Transparency = 1
+    Clone.Name = "FakeWater"
+    Clone.Parent = workspace
+end
+
+local function HeartbeatUpdate()
+    for Part, Data in pairs(TrailsPerPart) do
+        local T1, T2, A0, A1 = Data[1], Data[2], Data[3], Data[4]
+        local DestroyTrail = math.random(1,2) == 1 and T1 or T2
+        DestroyTrail:Destroy()
+        local KeepTrail = DestroyTrail == T1 and T2 or T1
+        local NewTrail = KeepTrail:Clone()
+        NewTrail.Parent = Part
+        if DestroyTrail == T1 then
+            TrailsPerPart[Part][1] = NewTrail
+        else
+            TrailsPerPart[Part][2] = NewTrail
+        end
+    end
+
+    for _, Part in pairs(workspace:GetChildren()) do
+        if Part.Name == "Water" and Part:IsA("BasePart") then
+            CreateInvisibleWater(Part)
+        end
+    end
+end
+
+-- ================================
+-- Sounds Update
+-- ================================
+local function UpdateSounds()
+    if not enabled then return end
+    local moving = Humanoid.MoveDirection.Magnitude > 0
+    if moving and not runState then
+        runState = true
+        if idle.Playing then idle:Stop() end
+        if not s1.Playing then s1:Play() end
+        if not s3.Playing then s3:Play() end
+    elseif not moving and runState then
+        runState = false
+        if s1.Playing then s1:Stop() end
+        if s3.Playing then s3:Stop() end
+        if not idle.Playing then idle:Play() end
+    end
+end
+
+-- ================================
+-- Animations Update
+-- ================================
+local function UpdateAnimations()
+    if not enabled then return end
+    local Speed = Humanoid.MoveDirection.Magnitude * Humanoid.WalkSpeed
+    if Speed > 0 then
+        if not RunAnimTrack.IsPlaying then RunAnimTrack:Play() end
+        if IdleAnimTrack.IsPlaying then IdleAnimTrack:Stop() end
+        RunAnimTrack:AdjustSpeed(14)
+        if Camera.FieldOfView ~= 140 then
+            if CurrentTween then CurrentTween:Cancel() end
+            CurrentTween = TweenService:Create(Camera, FOVTweenInfo, {FieldOfView = 140})
+            CurrentTween:Play()
+        end
+    else
+        if RunAnimTrack.IsPlaying then RunAnimTrack:Stop() end
+        if not IdleAnimTrack.IsPlaying then 
+StartEffect() IdleAnimTrack:Play() end
+        if Camera.FieldOfView ~= 70 then
+            if CurrentTween then CurrentTween:Cancel() end
+            CurrentTween = TweenService:Create(Camera, FOVTweenInfo, {FieldOfView = 70})
+            CurrentTween:Play()
+        end
+    end
+end
+
+-- ================================
+-- Running Sound Trigger
+-- ================================
+local function PlayRunningSound()
+    if not enabled then return end
+    local isRunning = Humanoid.MoveDirection.Magnitude > 0 and Humanoid.WalkSpeed > 0
+    if isRunning and not lastRunning then
+    end
+    lastRunning = isRunning
+end
+
+-- ================================
+-- Master Toggle Functions
+-- ================================
+local animConnection
+local soundConnection
+
+local function enableAll()
+    if enabled then return end
+    enabled = true
+    Humanoid.WalkSpeed = defaultWalkSpeed
+    InitializeTrails()
+    heartbeatConnection = RunService.Heartbeat:Connect(HeartbeatUpdate)
+
+    animConnection = RunService.RenderStepped:Connect(UpdateAnimations)
+    soundConnection = RunService.RenderStepped:Connect(function()
+        UpdateSounds()
+        PlayRunningSound()
+    end)
+    if Humanoid.MoveDirection.Magnitude == 0 then
+        idle:Play()
+    end
+end
+
+local function disableAll()
+    if not enabled then return end
+    enabled = false
+    Humanoid.WalkSpeed = 25
+    if heartbeatConnection then heartbeatConnection:Disconnect() heartbeatConnection = nil end
+    if animConnection then animConnection:Disconnect() animConnection = nil end
+    if soundConnection then soundConnection:Disconnect() soundConnection = nil end
+    for Part, Data in pairs(TrailsPerPart) do
+        for i=1,2 do
+            if Data[i] and Data[i].Parent then
+                Data[i]:Destroy()
+            end
+        end
+    end
+    TrailsPerPart = {}
+    if RunAnimTrack.IsPlaying then RunAnimTrack:Stop() end
+    if IdleAnimTrack.IsPlaying then IdleAnimTrack:Stop() end
+    s1:Stop()
+    s3:Stop()
+    idle:Stop()
+    Camera.FieldOfView = 70
+end
+
+-- ================================
+-- Initialize
+-- ================================
+
+local thrownFolder = workspace:FindFirstChild("Thrown")
+if not thrownFolder then
+    thrownFolder = Instance.new("Folder")
+    thrownFolder.Name = "Thrown"
+    thrownFolder.Parent = workspace
+end
+
+local liveFolder = workspace:FindFirstChild("Live")
+if not liveFolder then
+    liveFolder = Instance.new("Folder")
+    liveFolder.Name = "Live"
+    liveFolder.Parent = workspace
+end
+
+
+local l_Thrown_40 = Workspace:FindFirstChild("Thrown")
+if not thrownFolder then
+    thrownFolder = Instance.new("Folder")
+    thrownFolder.Name = "Thrown"
+    thrownFolder.Parent = Workspace
+end
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local function downloadFile(path, url)
+    if not isfile(path) then
+        local content = game:HttpGet(url)
+        writefile(path, content)
+    end
+end
+
+local localFileName = "tariiscute"
+local githubRawUrl = "https://raw.githubusercontent.com/NetlessScripter/TSB-TO-ANY-GAME/refs/heads/main/TsbResources.rbxm"
+
+downloadFile(localFileName, githubRawUrl)
+
+local model = game:GetObjects(getcustomasset(localFileName))[1]
+
+local resourcesFolder = ReplicatedStorage:FindFirstChild("Resources") or Instance.new("Folder")
+resourcesFolder.Name = "Resources"
+resourcesFolder.Parent = ReplicatedStorage
+
+model.Parent = resourcesFolder
+
+local tsbResources = resourcesFolder:FindFirstChild("TsbResources")
+if tsbResources then
+    for _, child in ipairs(tsbResources:GetChildren()) do
+        child.Parent = resourcesFolder
+    end
+    tsbResources:Destroy()
+end
+
+local nestedResources = resourcesFolder:FindFirstChild("resources")
+if nestedResources then
+    for _, child in ipairs(nestedResources:GetChildren()) do
+        child.Parent = resourcesFolder
+    end
+    nestedResources:Destroy()
+end
+
+local p = game.Players.LocalPlayer
+local c = p.Character or p.CharacterAdded:Wait()
+local h = c:WaitForChild("Humanoid")
+local r = c:WaitForChild("HumanoidRootPart")
+
+local src1 = game.ReplicatedStorage.Resources.DownSlam.Wind2.Part.Attachment
+local src2 = game.ReplicatedStorage.Resources.Cannon.Maybe.Maybe.lines
+
+local fx1
+local fx2
+local made = false
+local running = false
+local enabled = false
+local connection
+
+local function make()
+    if made then return end
+    made = true
+
+    fx1 = src1:Clone()
+    fx1.Parent = r
+
+    fx2 = src2:Clone()
+    fx2.Parent = r
+
+    local col = ColorSequence.new(Color3.fromRGB(255,59,0))
+
+    for _, x in pairs(fx1:GetChildren()) do
+        if x:IsA("ParticleEmitter") then
+            x.Enabled = false
+        end
+    end
+
+    for _, x in pairs(fx2:GetChildren()) do
+        if x:IsA("ParticleEmitter") then
+            x.Enabled = false
+            x.Color = col
+        end
+    end
+end
+
+local function startFX()
+    if not made then make() end
+
+    for _, x in pairs(fx1:GetChildren()) do
+        if x:IsA("ParticleEmitter") then
+            x.Enabled = true
+            x:Emit(15)
+        end
+    end
+
+    for _, x in pairs(fx2:GetChildren()) do
+        if x:IsA("ParticleEmitter") then
+            x.Enabled = true
+            x:Emit(15)
+        end
+    end
+end
+
+local function stopFX()
+    if not made then return end
+
+    for _, x in pairs(fx1:GetChildren()) do
+        if x:IsA("ParticleEmitter") then
+            x.Enabled = false
+        end
+    end
+
+    for _, x in pairs(fx2:GetChildren()) do
+        if x:IsA("ParticleEmitter") then
+            x.Enabled = false
+        end
+    end
+end
+
+local function onMoveChanged()
+    if not enabled then return end
+    local m = h.MoveDirection.Magnitude > 0
+
+    if m and not running then
+        running = true
+        startFX()
+    elseif not m and running then
+        running = false
+        stopFX()
+    end
+end
+
+local function enableRunEvents()
+    if enabled then return end
+    enabled = true
+    if not connection then
+        connection = h:GetPropertyChangedSignal("MoveDirection"):Connect(onMoveChanged)
+    end
+end
+
+local function disableRunEvents()
+    if not enabled then return end
+    enabled = false
+    if connection then
+        connection:Disconnect()
+        connection = nil
+    end
+    running = false
+    stopFX()
+end
+
+
+-- Automatically start if you want:
+
+local function myFunction()
+
+wait(0.5)
+
+local RunSound = Instance.new("Sound")
+RunSound.SoundId = "rbxassetid://4944377949"
+RunSound.Looped = true
+RunSound.Volume = 1
+RunSound.Parent = workspace
+
+local RunningThreshold = 0.1
+local IsPlaying = false
+
+Humanoid.Running:Connect(function(Speed)
+    if Speed > RunningThreshold and not IsPlaying then
+        IsPlaying = true
+    elseif Speed <= RunningThreshold and IsPlaying then
+
+        IsPlaying = false
+    end
+end)
+end
+
+local ts=game:GetService("TweenService")
+local p=game.Players.LocalPlayer
+local c=p.Character or p.CharacterAdded:Wait()
+local h=c:WaitForChild("Humanoid")
+local r=c:WaitForChild("HumanoidRootPart")
+local rs=game:GetService("RunService")
+local cam=workspace.CurrentCamera
+local ld=game:GetService("Lighting")
+
+-- DARK AURA FUNCTIONS ARE IN YOUR SCRIPT ALREADY
+-- EnableDarkAura()
+-- DisableDarkAura()
+
+local radius=10
+local speed=400
+local angle=0
+local ws0=25
+h.WalkSpeed=ws0
+local spd=false
+
+local pg=p:WaitForChild("PlayerGui")
+local gui=Instance.new("ScreenGui")
+gui.Parent=pg
+gui.Name="PhaseGui"
+gui.ResetOnSpawn=false
+gui.IgnoreGuiInset=true
+
+local baseColor=Color3.fromRGB(33,66,132)
+
+local function cb(parent,pos,size,text,tcol)
+    local f=Instance.new("Frame")
+    f.Parent=parent
+    f.Size=size
+    f.Position=pos
+    f.BackgroundColor3=baseColor
+    f.BackgroundTransparency=0.2
+    Instance.new("UICorner",f)
+    local s=Instance.new("UIStroke",f)
+    s.Color=baseColor
+    local b=Instance.new("TextButton")
+    b.Parent=f
+    b.Size=UDim2.new(1,0,1,0)
+    b.BackgroundTransparency=1
+    b.Text=text
+    b.TextColor3=tcol
+    b.TextScaled=true
+    b.Font=Enum.Font.RobotoMono
+    b.AutoButtonColor=false
+    return f,b
+end
+
+local sh,sb=cb(gui,UDim2.new(1,-160,0,10),UDim2.new(0,150,0,40),"STOP",Color3.fromRGB(255,255,255))
+local mir,mirb=cb(gui,UDim2.new(0,10,0,10),UDim2.new(0,150,0,40),"ANGULAR MIRAGE",Color3.fromRGB(0,255,255))
+local ph,phb=cb(gui,UDim2.new(0,10,0,60),UDim2.new(0,150,0,40),"PHASE",Color3.fromRGB(0,255,0))
+local sp,spb=cb(gui,UDim2.new(0,10,0,110),UDim2.new(0,150,0,40),"TOGGLE SPEED",Color3.fromRGB(255,255,0))
+
+local ang=false
+local phs=false
+local nc=false
+local ocf=r.CFrame
+local occ=cam.CameraType
+
+local function circle(dt)
+    if not ang then return end
+
+V88()
+
+    angle+=dt*speed/radius
+    local o=Vector3.new(math.cos(angle)*radius,0,math.sin(angle)*radius)
+    local t=ocf.Position+o
+    local d=t-r.Position
+    r.AssemblyLinearVelocity=d/dt
+    if d.Magnitude>0.1 then
+        r.CFrame=CFrame.new(r.Position,r.Position+Vector3.new(d.X,0,d.Z))
+    end
+end
+
+local function sn(state)
+    nc=state
+    for _,v in next,c:GetDescendants() do
+        if v:IsA("BasePart") then v.CanCollide=not state end
+    end
+end
+
+mirb.MouseButton1Click:Connect(function()
+
+StopVibrate()
+
+    DisableDarkAura()
+    ang=not ang
+    if ang then
+
+V88()
+
+        ocf=r.CFrame
+        occ=cam.CameraType
+        cam.CameraType=Enum.CameraType.Scriptable
+        sn(true)
+    else
+
+V87()
+
+        r.AssemblyLinearVelocity=Vector3.new()
+        cam.CameraType=occ
+        sn(false)
+    end
+end)
+
+phb.MouseButton1Click:Connect(function()
+    phs=not phs
+    if phs then
+        sn(true)
+
+StartVibrate()
+
+        EnableDarkAura()
+    else
+
+StopVibrate()
+
+        sn(false)
+        DisableDarkAura()
+    end
+end)
+
+local c = p.Character or p.CharacterAdded:Wait()
+local h = c:WaitForChild("Humanoid")
+local r = c:WaitForChild("HumanoidRootPart")
+
+local a
+local x
+local t = false
+local spd = false
+local b = "rbxassetid://897"
+local ws0 = h.WalkSpeed
+
+local RunService = game:GetService("RunService")
+local heartbeatConnection
+local runningConnection
+
+spb.MouseButton1Click:Connect(function()
+    spd = not spd
+
+V89()
+
+V87()
+
+    if spd then
+        if heartbeatConnection then heartbeatConnection:Disconnect() end
+        heartbeatConnection = RunService.Heartbeat:Connect(function()
+            if h and h.Parent then
+                h.WalkSpeed = 1000
+            end
+        end)
+
+EnableLightningGlobal()
+
+EnableAllCoolStuff()
+
+        a = Instance.new("Sound")
+        a.SoundId = "rbxassetid://9112776526"
+        a.Volume = 0.5
+        a.Looped = true
+        a.Parent = r
+        a:Play()
+
+        if runningConnection then
+            runningConnection:Disconnect()
+            runningConnection = nil
+        end
+
+        runningConnection = h.Running:Connect(function(s)
+            if not spd then return end -- ignore if toggled OFF
+
+StopEffect() 
+
+DisableCoolStuff()
+
+DisableLightningGlobal()
+
+            if s > 0 then
+                if not t then
+                    t = true
+                    if x then x:Destroy() end
+                    task.delay(0.3, function() t = false end)
+                end
+            else
+
+EnableLightningGlobal()
+
+EnableAllCoolStuff()
+
+                StartEffect()
+            end
+        end)
+
+        enableRunEvents()
+        enableAll()
+    else
+
+DisableLightningGlobal()
+
+EnableAllCoolStuff()
+
+StopEffect() 
+
+        if heartbeatConnection then
+            heartbeatConnection:Disconnect()
+            heartbeatConnection = nil
+        end
+        h.WalkSpeed = ws0
+
+        if x then x:Destroy() end
+        if a then a:Destroy() end
+
+DisableCoolStuff()
+
+V88()
+
+V90()
+
+        StopEffect() -- now this will actually stop
+        if runningConnection then
+            runningConnection:Disconnect()
+            runningConnection = nil
+        end
+
+        disableRunEvents()
+        disableAll()
+    end
+end)
+
+sb.MouseButton1Click:Connect(function()
+    -- Stop effects and disconnect events first
+    StopEffect()
+    if heartbeatConnection then
+        heartbeatConnection:Disconnect()
+        heartbeatConnection = nil
+    end
+    if runningConnection then
+        runningConnection:Disconnect()
+        runningConnection = nil
+    end
+    disableRunEvents()
+    disableAll()
+
+    -- Reset character
+    r.AssemblyLinearVelocity = Vector3.new()
+    h.WalkSpeed = ws0
+    ang = false
+    phs = false
+    spd = false
+
+    -- Destroy temporary objects
+    if x then x:Destroy() end
+    if a then a:Destroy() end
+
+    -- Disable/enable effects in proper order
+    DisableLightningGlobal()
+    EnableAllCoolStuff()
+    DisableCoolStuff()
+    V88()
+    V90()
+    StopVibrate()
+    StopVibrate()
+    StopVibrate()
+    DisableDarkAura()
+
+    -- Reset camera smoothly at the end
+    cam.CameraType = Enum.CameraType.Custom
+    local info = TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut)
+    local goal = { FieldOfView = 70 }
+    ts:Create(cam, info, goal):Play()
+end)
+
+local function gnp()
+    local np=nil
+    local md=9999
+    for _,pl in next,game.Players:GetPlayers() do
+        if pl~=p then
+            local cc=pl.Character
+            local hr=cc and cc:FindFirstChild("HumanoidRootPart")
+            local d=hr and (r.Position-hr.Position).Magnitude
+            if d and d<md then md=d np=hr end
+        end
+    end
+    return np
+end
+
+rs.Heartbeat:Connect(function(dt)
+    if nc then
+        for _,v in next,c:GetDescendants() do
+            if v:IsA("BasePart") then v.CanCollide=false end
+        end
+    end
+    circle(dt)
+end)
+
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+
+local targetAnimId = "rbxassetid://108670084190135"
+
+humanoid.AnimationPlayed:Connect(function(animTrack)
+	if animTrack.Animation and animTrack.Animation.AnimationId == targetAnimId then
+		animTrack:Stop()
+	end
+end)
+V88()
+
+V90()
+
+
+
+
+loadstring(game:HttpGet("https://raw.githubusercontent.com/ChosenSkibidi/VIP-SCRIPTS/refs/heads/main/useless%20notification"))()
+
+local p=game:GetService("Players").LocalPlayer
+local g=p.PlayerGui.Attention.DialogueFrameAnnouncement
+
+g.Message.Text="Enjoy the script, and thank you for using our work."
+g:GetChildren()[11].Text="This script was created by Infinite Studios."
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
+
+local p = Players.LocalPlayer
+local gui = player:WaitForChild("PlayerGui"):WaitForChild("PhaseGui")
+
+-- Hide GUI entirely on PC
+if UserInputService.TouchEnabled == false then
+    gui.Enabled = false
+end
+
+local function onCharacterAdded(char)
+    local humanoid = char:WaitForChild("Humanoid")
+    humanoid.Died:Connect(function()
+        if gui and gui.Enabled then
+            for _, child in ipairs(gui:GetChildren()) do
+                if child:IsA("GuiObject") then
+                    local tweenInfo = TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut)
+                    local goal = {Position = child.Position + UDim2.new(0,0,-1,0)} -- move up
+                    local tween = TweenService:Create(child, tweenInfo, goal)
+                    tween:Play()
+                    
+                    tween.Completed:Connect(function()
+                        task.delay(10, function()
+                            if child then
+                                child:Destroy()
+                            end
+                        end)
+                    end)
+                end
+            end
+        end
+    end)
+end
+
+player.CharacterAdded:Connect(onCharacterAdded)
+
+if player.Character then
+    onCharacterAdded(player.Character)
+end
+local uis = game:GetService("UserInputService")
+
+uis.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+
+    if input.UserInputType == Enum.UserInputType.Keyboard then
+        local key = input.KeyCode
+        if key == Enum.KeyCode.Q then
+
+    spd = not spd
+
+V89()
+
+V87()
+
+    if spd then
+        if heartbeatConnection then heartbeatConnection:Disconnect() end
+        heartbeatConnection = RunService.Heartbeat:Connect(function()
+            if h and h.Parent then
+                h.WalkSpeed = 1000
+            end
+        end)
+
+EnableAllCoolStuff()
+
+EnableLightningGlobal()
+
+        a = Instance.new("Sound")
+        a.SoundId = "rbxassetid://9112776526"
+        a.Volume = 0.5
+        a.Looped = true
+        a.Parent = r
+        a:Play()
+
+        if runningConnection then
+            runningConnection:Disconnect()
+            runningConnection = nil
+        end
+
+        runningConnection = h.Running:Connect(function(s)
+            if not spd then return end -- ignore if toggled OFF
+
+StopEffect() 
+
+DisableLightningGlobal()
+
+            if s > 0 then
+                if not t then
+                    t = true
+                    if x then x:Destroy() end
+                    task.delay(0.3, function() t = false end)
+                end
+            else
+
+EnableLightningGlobal()
+
+                StartEffect()
+            end
+        end)
+
+        enableRunEvents()
+
+        enableAll()
+    else
+
+StopEffect() 
+
+DisableLightningGlobal()
+
+DisableCoolStuff()
+
+        if heartbeatConnection then
+            heartbeatConnection:Disconnect()
+            heartbeatConnection = nil
+        end
+        h.WalkSpeed = ws0
+
+        if x then x:Destroy() end
+        if a then a:Destroy() end
+
+V88()
+
+V90()
+
+        StopEffect() -- now this will actually stop
+        if runningConnection then
+            runningConnection:Disconnect()
+            runningConnection = nil
+        end
+
+        disableRunEvents()
+        disableAll()
+    end
+
+        elseif key == Enum.KeyCode.W then
+
+    phs=not phs
+    if phs then
+        sn(true)
+
+StartVibrate()
+
+        EnableDarkAura()
+    else
+
+StopVibrate()
+
+        sn(false)
+        DisableDarkAura()
+    end
+
+        elseif key == Enum.KeyCode.D then
+
+StopVibrate()
+
+    DisableDarkAura()
+    ang=not ang
+    if ang then
+
+V88()
+
+        ocf=r.CFrame
+        occ=cam.CameraType
+        cam.CameraType=Enum.CameraType.Scriptable
+        sn(true)
+    else
+
+V87()
+
+        r.AssemblyLinearVelocity=Vector3.new()
+        cam.CameraType=occ
+        sn(false)
+    end
+
+elseif key == Enum.KeyCode.X then
+
+    -- Stop effects and disconnect events
+    StopEffect()
+    if heartbeatConnection then
+        heartbeatConnection:Disconnect()
+        heartbeatConnection = nil
+    end
+    if runningConnection then
+        runningConnection:Disconnect()
+        runningConnection = nil
+    end
+    disableRunEvents()
+    disableAll()
+
+    -- Reset character physics and states
+    r.AssemblyLinearVelocity = Vector3.new()
+    h.WalkSpeed = ws0
+    ang = false
+    phs = false
+    spd = false
+
+    -- Destroy temporary objects safely
+    if x then x:Destroy() end
+    if a then a:Destroy() end
+
+    -- Disable/enable effects in proper order
+    DisableLightningGlobal()
+    EnableAllCoolStuff()
+    DisableCoolStuff()
+    V88()
+    V90()
+    StopVibrate()
+    StopVibrate()
+    StopVibrate()
+    DisableDarkAura()
+
+    -- Smoothly reset camera at the end
+    cam.CameraType = Enum.CameraType.Custom
+    local ts = game:GetService("TweenService")
+    local info = TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut)
+    local goal = { FieldOfView = 70 }
+    ts:Create(cam, info, goal):Play()
+
+end
+end
+end)
+
+local p = game.Players.LocalPlayer
+local c = p.Character or p.CharacterAdded:Wait()
+local u = p.Name
+
+local b = {
+    "LeftHand","LeftLowerArm","LeftUpperArm",
+    "RightHand","RightLowerArm","RightUpperArm",
+    "LeftFoot","LeftLowerLeg","LeftUpperLeg",
+    "RightFoot","RightLowerLeg","RightUpperLeg",
+    "UpperTorso","LowerTorso"
+}
+
+local ig = workspace:WaitForChild(u):WaitForChild("HumanoidRootPart"):WaitForChild("Attachment")
+
+local function mk()
+end
+
+local godCS = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255,255,255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(255,255,255))
+})
+
+local nwaCS = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(210,160,255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(140,0,255))
+})
+
+local zoomCS = ColorSequence.new({
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(160,220,255)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(0,120,255))
+})
+
+spawn(function()
+    while true do
+        local cs
+        local spot
+
+        if _G.Zoom then
+            cs = zoomCS
+            spot = Color3.fromRGB(0,120,255)
+        elseif _G.GodOfSpeed and _G.NWA then
+            if math.random(2) == 1 then
+                cs = godCS
+                spot = Color3.fromRGB(255,220,0)
+            else
+                cs = nwaCS
+                spot = Color3.fromRGB(140,0,255)
+            end
+        elseif _G.GodOfSpeed then
+            cs = godCS
+            spot = Color3.fromRGB(255,220,0)
+        elseif _G.NWA then
+            cs = nwaCS
+            spot = Color3.fromRGB(140,0,255)
+        end
+
+        if cs then
+            mk()
+
+            for _,n in pairs(b) do
+                local pr = c:FindFirstChild(n)
+                if pr then
+                    for _,t in pairs(pr:GetChildren()) do
+                        if t:IsA("Trail") then
+                            t.Color = cs
+                        end
+                    end
+                end
+            end
+
+            for _,v in pairs(c:GetDescendants()) do
+                if v:IsA("ParticleEmitter") then
+                    local cur = v
+                    local g = false
+                    while cur do
+                        if cur == ig then
+                            g = true
+                            break
+                        end
+                        cur = cur.Parent
+                    end
+
+                    if v.Texture == "rbxassetid://9731596776" then
+                        g = true
+                    end
+                    if v.Texture == "rbxassetid://10583327833" then
+                        v.Color = cs
+                        g = true
+                    end
+
+                    if not g then
+                        v.Color = cs
+                    end
+                elseif v:IsA("SpotLight") then
+                    v.Color = spot
+                    v.Enabled = true
+                end
+            end
+        end
+
+        wait()
+    end
+end)
+
+local p = game.Players.LocalPlayer
+local c = p.Character or p.CharacterAdded:Wait()
+local h = c:WaitForChild("Humanoid")
+if h.RigType ~= Enum.HumanoidRigType.R15 then return end
+
+local hrp = c:WaitForChild("HumanoidRootPart")
+local cam = workspace.CurrentCamera
+local rs = game:GetService("RunService")
+
+local lt = c:WaitForChild("LowerTorso")
+local ut = c:WaitForChild("UpperTorso")
+local head = c:WaitForChild("Head")
+
+local root = lt:WaitForChild("Root")
+local waist = ut:WaitForChild("Waist")
+
+local aim = Instance.new("Part")
+aim.Name = "aimpart"
+aim.Transparency = 1
+aim.CanCollide = false
+aim.Size = Vector3.new(1,1,1)
+aim.Parent = c
+
+local w = Instance.new("Weld")
+w.Part0 = aim
+w.Part1 = hrp
+w.C0 = CFrame.Angles(-math.pi/2,0,0)
+w.Parent = aim
+
+local att = Instance.new("Attachment")
+att.Parent = hrp
+
+local ik = Instance.new("IKControl")
+ik.Name = "lookik"
+ik.Type = Enum.IKControlType.LookAt
+ik.EndEffector = head
+ik.Target = att
+ik.ChainRoot = ut
+ik.Weight = 0.55
+ik.SmoothTime = 0.25
+ik.Enabled = true
+ik.Parent = h
+
+rs.RenderStepped:Connect(function()
+	local mv = h.MoveDirection.Magnitude
+	local vel = hrp.Velocity.Magnitude
+
+	ik.Enabled = not (vel > 1 and mv > 0)
+
+	local rcf = CFrame.new(0, root.C0.Y, 0)
+	local wcf = CFrame.new(0, waist.C0.Y, 0)
+
+	if not hrp.Anchored and h.WalkSpeed > 0 and mv > 0 then
+		local dir = hrp.CFrame:VectorToObjectSpace(h.MoveDirection)
+		local v = hrp.CFrame:VectorToObjectSpace(hrp.Velocity) * 0.01
+		local x = math.clamp(v.X, 0.8, 0.8)
+		local z = math.clamp(v.Z, 0.8, 0.8)
+
+		rcf *= CFrame.Angles(dir.Z * z / 3, 0, -dir.X * x / 2)
+		wcf *= CFrame.Angles(dir.Z * z / 3, 0, -dir.X * x / 2)
+	end
+
+	root.C0 = root.C0:Lerp(rcf, 0.07)
+	waist.C0 = waist.C0:Lerp(wcf, 0.07)
+
+	local cf = cam.CFrame
+	local lv = cf.LookVector
+	local ang = math.acos(hrp.CFrame.LookVector:Dot(lv))
+	local dist = ang > math.pi/2 and 5 or 15
+	local pos = cf.Position + lv * dist
+
+	att.WorldCFrame = CFrame.new(pos, pos + lv)
+end)
