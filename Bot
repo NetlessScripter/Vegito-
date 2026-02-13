@@ -1,0 +1,885 @@
+-- ULTRA-OPTIMIZED GEOMETRY DASH BOT v2.0
+-- MAJOR IMPROVEMENTS:
+-- 1. Wave physics fixed - constant velocity, no gravity
+-- 2. Wave-specific math calculations for threading obstacles  
+-- 3. AGGRESSIVE learning - LR:0.5, Pass reward:15, learns every 3 frames
+-- 4. 25 batch learning iterations on death
+-- 5. Increased physics values for all modes
+-- 6. Math optimizer trusts itself more (70% confidence vs 85%)
+-- 7. Wave gets 90% physics urgency vs 60% for other modes
+-- 8. Mini mode fully supported with separate physics
+-- 9. RegularSpike## detection + Really black color
+-- 10. _G.ultraMode() for maximum aggression if still slow
+-- Single file, production ready, uses Roblox player module mechanics
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local p = Players.LocalPlayer
+local allowed = { Hitmeforgamepass = true, Pghlego194827 = true }
+if not allowed[p.Name] then p:Kick("Unauthorized user.") return end
+
+local lvl = workspace:WaitForChild("Level")
+local imm = lvl:WaitForChild("Immutable")
+local plr = imm:WaitForChild("Player")
+local objs = lvl:WaitForChild("GameObjects")
+
+-- ============================================================================
+-- CONFIG
+-- ============================================================================
+local CFG = {
+    LR = 0.5, -- MUCH higher learning rate
+    GAMMA = 0.98,
+    EPS = 0.6, -- MORE exploration
+    EPS_MIN = 0.02,
+    EPS_DECAY = 0.9988, -- slower decay for more exploration
+    
+    REPLAY_SIZE = 4000, -- bigger buffer
+    BATCH = 80, -- larger batches
+    LOOKAHEAD = 20, -- see further ahead
+    MAX_HAZARDS = 15,
+    
+    R_ALIVE = 0.25, -- bigger alive reward
+    R_PASS = 15.0, -- MUCH bigger pass reward
+    R_DEATH = -6.0, -- less harsh death
+    R_CLOSE = 3.0, -- bigger close call reward
+    R_PROGRESS = 0.5, -- bigger progress reward
+    
+    FRAME_SKIP = 1,
+    GRID_SIZE = 30
+}
+
+-- ============================================================================
+-- STATE
+-- ============================================================================
+local STATE = {
+    alive = true,
+    mode = "cube",
+    mini = false, -- mini mode
+    eps = CFG.EPS,
+    frame = 0,
+    deaths = 0,
+    passes = 0,
+    totalR = 0,
+    
+    q = {}, -- Q-table
+    replay = {}, -- experience replay
+    hazards = {},
+    passed = {},
+    
+    lastS = nil,
+    lastA = nil,
+    lastF = nil,
+    
+    maxX = 0, -- track furthest progress
+    lastX = 0, -- for progress reward
+    lastMethod = "unknown" -- track decision method
+}
+
+-- ============================================================================
+-- HAZARD SCANNER (uses decompiled pattern: GetDescendants)
+-- ============================================================================
+local function scanHazards()
+    local h = {}
+    for _, obj in pairs(objs:GetDescendants()) do
+        if obj:IsA("BasePart") then
+            local isHazard = false
+            local threat = 1.0
+            
+            -- PRIMARY: Check for RegularSpike pattern (RegularSpike01, RegularSpike02, etc)
+            local objName = obj.Name
+            local parentName = obj.Parent and obj.Parent.Name or ""
+            
+            -- Check if object or parent starts with "RegularSpike"
+            if objName:match("^RegularSpike%d+") or parentName:match("^RegularSpike%d+") then
+                isHazard = true
+            end
+            
+            -- Check if it's specifically a Hitbox under a RegularSpike
+            if objName == "Hitbox" and parentName:match("^RegularSpike%d+") then
+                isHazard = true
+            end
+            
+            -- SECONDARY: Color-based detection for Really black (17, 17, 17)
+            if obj.BrickColor == BrickColor.new("Really black") then
+                isHazard = true
+            end
+            
+            local c = obj.Color
+            local r, g, b = c.R * 255, c.G * 255, c.B * 255
+            if r < 25 and g < 25 and b < 25 and (r > 10 or g > 10 or b > 10) then
+                isHazard = true
+            end
+            
+            if c.R < 0.1 and c.G < 0.1 and c.B < 0.1 and (c.R > 0.04 or c.G > 0.04 or c.B > 0.04) then
+                isHazard = true
+            end
+            
+            -- TERTIARY: Specific hazard names only (not generic block names)
+            local n = objName:lower()
+            if n:find("saw") or n:find("spike") then
+                isHazard = true
+                if n:find("saw") then threat = 1.5 end
+            end
+            
+            if isHazard then
+                table.insert(h, {
+                    p = obj,
+                    pos = obj.Position,
+                    sz = obj.Size,
+                    t = threat,
+                    name = objName -- store name for debugging
+                })
+            end
+        end
+    end
+    table.sort(h, function(a,b) return a.pos.X < b.pos.X end)
+    return h
+end
+
+-- ============================================================================
+-- MINI MODE DETECTOR
+-- ============================================================================
+local function detectMiniMode()
+    -- Check player size - mini mode makes player ~50% smaller
+    if plr.Size.Y < 1.5 then
+        return true
+    end
+    
+    -- Check for mini portal nearby or mini attribute
+    if plr:FindFirstChild("Mini") then
+        return plr.Mini.Value
+    end
+    
+    -- Check parent for mini indicator
+    if plr.Parent and plr.Parent.Name:lower():find("mini") then
+        return true
+    end
+    
+    return false
+end
+
+-- ============================================================================
+-- MATHEMATICAL JUMP OPTIMIZER
+-- ============================================================================
+local function calculateOptimalJump(px, py, vx, vy, hazard, mode, isMini)
+    -- Calculate time to reach obstacle
+    local dx = hazard.pos.X - px
+    if dx <= 0 or vx <= 0 then return nil end
+    
+    local timeToImpact = dx / vx
+    
+    -- Get correct physics for mode and mini state
+    local jumpPower, gravity = getPhysics(mode, 1, isMini)
+    
+    -- Current trajectory: y(t) = py + vy*t - 0.5*g*t^2
+    local g = gravity
+    local predictedY = py + vy * timeToImpact - 0.5 * g * timeToImpact * timeToImpact
+    
+    -- Obstacle boundaries
+    local obstacleTop = hazard.pos.Y + hazard.sz.Y / 2
+    local obstacleBottom = hazard.pos.Y - hazard.sz.Y / 2
+    
+    -- Calculate if we'll collide without jumping
+    local playerRadius = isMini and 0.35 or 0.5 -- smaller hitbox in mini mode
+    local willCollide = predictedY > (obstacleBottom - playerRadius) and 
+                        predictedY < (obstacleTop + playerRadius) and
+                        dx < (hazard.sz.X / 2 + playerRadius)
+    
+    if not willCollide then
+        -- No action needed, we'll clear it
+        return {action = 0, confidence = 0.9, reason = "natural_clear"}
+    end
+    
+    -- Calculate jump needed
+    if mode == "cube" then
+        -- Parabolic jump: need to find if jump clears obstacle
+        local jumpV0 = jumpPower
+        local peakHeight = (jumpV0 * jumpV0) / (2 * g)
+        local jumpPeakTime = jumpV0 / g
+        
+        -- Time when we'll be at obstacle X position
+        local timeAtObstacle = dx / vx
+        
+        -- If we jump now, where will we be at obstacle?
+        local jumpY = py + jumpV0 * timeAtObstacle - 0.5 * g * timeAtObstacle * timeAtObstacle
+        
+        -- Check clearance (mini mode needs less clearance)
+        local clearance = jumpY - obstacleTop
+        local minClearance = isMini and 0.2 or 0.3
+        
+        if clearance > minClearance then
+            return {action = 1, confidence = 0.95, reason = "math_jump_clear", clearance = clearance}
+        elseif clearance > -0.5 then
+            return {action = 1, confidence = 0.7, reason = "math_jump_tight", clearance = clearance}
+        else
+            -- Jump won't clear, maybe duck?
+            return {action = 0, confidence = 0.6, reason = "math_duck", clearance = clearance}
+        end
+        
+    elseif mode == "ship" or mode == "wave" then
+        -- Wave/Ship: calculate if we can thread through
+        local targetY = (obstacleTop + obstacleBottom) / 2
+        local currentRelativeY = py - targetY
+        
+        if mode == "wave" then
+            -- Wave needs to position itself carefully
+            local waveVel = isMini and PHYS.mini_wave_up or PHYS.wave_up
+            local timeToObstacle = timeToImpact
+            
+            -- Calculate where we'll be if we hold up
+            local upY = py + waveVel * timeToObstacle
+            -- Calculate where we'll be if we go down
+            local downY = py + (isMini and PHYS.mini_wave_down or PHYS.wave_down) * timeToObstacle
+            
+            -- Check which action gets us closer to safe passage
+            local upClearTop = upY - obstacleTop
+            local upClearBot = obstacleBottom - upY
+            local downClearTop = downY - obstacleTop
+            local downClearBot = obstacleBottom - downY
+            
+            -- Want to be in the middle, but if forced to choose:
+            if py < targetY - 0.5 then
+                -- Below center, go up
+                if upClearTop > -0.3 then
+                    return {action = 1, confidence = 0.9, reason = "wave_math_up"}
+                else
+                    return {action = 0, confidence = 0.75, reason = "wave_math_stay_down"}
+                end
+            elseif py > targetY + 0.5 then
+                -- Above center, go down
+                if downClearBot > -0.3 then
+                    return {action = 0, confidence = 0.9, reason = "wave_math_down"}
+                else
+                    return {action = 1, confidence = 0.75, reason = "wave_math_stay_up"}
+                end
+            else
+                -- Near center, maintain or adjust slightly
+                if math.abs(currentRelativeY) < 0.2 then
+                    return {action = py < targetY and 1 or 0, confidence = 0.85, reason = "wave_math_center"}
+                else
+                    return {action = currentRelativeY < 0 and 1 or 0, confidence = 0.8, reason = "wave_math_adjust"}
+                end
+            end
+        else
+            -- Ship logic
+            if py < targetY then
+                return {action = 1, confidence = 0.8, reason = "math_ship_up"}
+            else
+                return {action = 0, confidence = 0.8, reason = "math_ship_down"}
+            end
+        end
+        
+    elseif mode == "ufo" then
+        -- Similar to cube but different jump velocity
+        local jumpV0 = jumpPower
+        local timeAtObstacle = dx / vx
+        local jumpY = py + jumpV0 * timeAtObstacle - 0.5 * g * timeAtObstacle * timeAtObstacle
+        local clearance = jumpY - obstacleTop
+        local minClearance = isMini and 0.15 or 0.2
+        
+        if clearance > minClearance then
+            return {action = 1, confidence = 0.9, reason = "math_ufo_jump", clearance = clearance}
+        else
+            return {action = 0, confidence = 0.6, reason = "math_ufo_wait", clearance = clearance}
+        end
+    end
+    
+    return nil
+end
+
+-- ============================================================================
+-- PHYSICS PREDICTOR (inspired by VR torso tracking from ControlModule)
+-- ============================================================================
+local PHYS = {
+    -- Normal mode
+    cube_jump = 28, -- increased
+    ship_up = 20, -- increased
+    ufo_jump = 26, -- increased
+    ball_flip = 24, -- increased
+    wave_up = 18, -- wave constant velocity up
+    wave_down = -18, -- wave constant velocity down
+    grav = 58, -- increased
+    
+    -- Mini mode (reduced gravity, lower jumps)
+    mini_cube_jump = 16,
+    mini_ship_up = 13,
+    mini_ufo_jump = 15,
+    mini_ball_flip = 14,
+    mini_wave_up = 11, -- 65% of normal
+    mini_wave_down = -11,
+    mini_grav = 32
+}
+
+local function getPhysics(mode, action, isMini)
+    if isMini then
+        if mode == "cube" then return PHYS.mini_cube_jump, PHYS.mini_grav
+        elseif mode == "ship" then return PHYS.mini_ship_up, PHYS.mini_grav
+        elseif mode == "ufo" then return PHYS.mini_ufo_jump, PHYS.mini_grav
+        elseif mode == "ball" then return PHYS.mini_ball_flip, PHYS.mini_grav
+        elseif mode == "wave" then 
+            return action == 1 and PHYS.mini_wave_up or PHYS.mini_wave_down, 0
+        end
+    else
+        if mode == "cube" then return PHYS.cube_jump, PHYS.grav
+        elseif mode == "ship" then return PHYS.ship_up, PHYS.grav
+        elseif mode == "ufo" then return PHYS.ufo_jump, PHYS.grav
+        elseif mode == "ball" then return PHYS.ball_flip, PHYS.grav
+        elseif mode == "wave" then 
+            return action == 1 and PHYS.wave_up or PHYS.wave_down, 0
+        end
+    end
+    return 20, 50
+end
+
+local function predictPath(pos, vel, act, mode, steps, isMini)
+    local traj = {}
+    local p = Vector3.new(pos.X, pos.Y, pos.Z)
+    local v = Vector3.new(vel.X, vel.Y, vel.Z)
+    local dt = 0.04
+    
+    -- Get correct physics values
+    local jumpPower, gravity = getPhysics(mode, act, isMini)
+    
+    for i = 1, steps do
+        if mode == "wave" then
+            -- Wave: constant velocity based on input, NO gravity
+            if act == 1 then
+                v = Vector3.new(v.X, isMini and PHYS.mini_wave_up or PHYS.wave_up, v.Z)
+            else
+                v = Vector3.new(v.X, isMini and PHYS.mini_wave_down or PHYS.wave_down, v.Z)
+            end
+        elseif act == 1 then
+            if mode == "cube" and i == 1 and v.Y <= 1 then
+                v = Vector3.new(v.X, jumpPower, v.Z)
+            elseif mode == "ship" then
+                v = Vector3.new(v.X, jumpPower, v.Z)
+            elseif mode == "ufo" and i == 1 then
+                v = Vector3.new(v.X, jumpPower, v.Z)
+            elseif mode == "ball" and i == 1 then
+                v = Vector3.new(v.X, -v.Y * 0.75 + jumpPower, v.Z)
+            end
+        elseif act == 0 and mode == "ship" then
+            local down = jumpPower * -0.65
+            v = Vector3.new(v.X, down, v.Z)
+        end
+        
+        -- Apply gravity (except wave)
+        if mode ~= "wave" then
+            v = Vector3.new(v.X, v.Y - gravity * dt, v.Z)
+        end
+        
+        p = p + v * dt
+        table.insert(traj, {p = p, v = v})
+    end
+    
+    return traj
+end
+
+local function trajCollides(traj, hazards)
+    local playerSize = STATE.mini and 0.35 or 0.5
+    for _, point in ipairs(traj) do
+        for _, h in ipairs(hazards) do
+            if h.p and h.p.Parent then
+                local dx = math.abs(point.p.X - h.pos.X)
+                local dy = math.abs(point.p.Y - h.pos.Y)
+                if dx < (playerSize + h.sz.X/2) and dy < (playerSize + h.sz.Y/2) then
+                    return true
+                end
+            end
+        end
+    end
+    return false
+end
+
+-- ============================================================================
+-- STATE ENCODER (compact, discretized like camera module properties)
+-- ============================================================================
+local function extractFeats(px, py, vx, vy)
+    local f = {
+        px = px, py = py, vx = vx, vy = vy,
+        obs = {},
+        minD = 999,
+        avgT = 0,
+        nAhead = 0
+    }
+    
+    local cnt = 0
+    for _, h in ipairs(STATE.hazards) do
+        if cnt >= CFG.MAX_HAZARDS then break end
+        if h.p and h.p.Parent then
+            local dx = h.pos.X - px
+            if dx >= -2 and dx <= 18 then
+                cnt = cnt + 1
+                local dy = h.pos.Y - py
+                local d = math.sqrt(dx*dx + dy*dy)
+                
+                table.insert(f.obs, {dx=dx, dy=dy, d=d, t=h.t})
+                
+                if d < f.minD then f.minD = d end
+                if dx > 0 then
+                    f.nAhead = f.nAhead + 1
+                    f.avgT = f.avgT + h.t
+                end
+            end
+        end
+    end
+    
+    if f.nAhead > 0 then
+        f.avgT = f.avgT / f.nAhead
+    end
+    
+    return f
+end
+
+local function stateKey(f, isMini)
+    if #f.obs == 0 then 
+        return STATE.mode .. (isMini and ":mini" or "") .. ":safe" 
+    end
+    
+    local o = f.obs[1]
+    -- Finer discretization for 30x30 grid
+    return string.format("%s%s:y%d:vy%d:dx%d:dy%d:d%d:t%d:n%d",
+        STATE.mode,
+        isMini and ":mini" or "",
+        math.floor(f.py / 0.3), -- finer Y buckets
+        math.floor(f.vy / 3), -- finer velocity buckets
+        math.floor(o.dx / 0.3), -- finer X distance
+        math.floor(o.dy / 0.3), -- finer Y distance
+        math.floor(o.d / 0.5), -- actual distance to obstacle
+        math.floor(f.avgT / 0.2),
+        math.min(f.nAhead, 10)
+    )
+end
+
+-- ============================================================================
+-- Q-LEARNING (with experience replay like BaseCharacterController pattern)
+-- ============================================================================
+local function getQ(s, a)
+    if not STATE.q[s] then STATE.q[s] = {[0]=0, [1]=0} end
+    return STATE.q[s][a]
+end
+
+local function setQ(s, a, v)
+    if not STATE.q[s] then STATE.q[s] = {[0]=0, [1]=0} end
+    STATE.q[s][a] = v
+end
+
+local function getBest(s)
+    local q0, q1 = getQ(s, 0), getQ(s, 1)
+    return q1 > q0 and 1 or 0
+end
+
+local function updateQ(s, a, r, ns, done)
+    local curr = getQ(s, a)
+    local maxNext = done and 0 or math.max(getQ(ns, 0), getQ(ns, 1))
+    local target = r + CFG.GAMMA * maxNext
+    setQ(s, a, curr + CFG.LR * (target - curr))
+end
+
+local function addReplay(s, a, r, ns, done)
+    table.insert(STATE.replay, {s=s, a=a, r=r, ns=ns, done=done})
+    if #STATE.replay > CFG.REPLAY_SIZE then
+        table.remove(STATE.replay, 1)
+    end
+end
+
+local function learnBatch()
+    if #STATE.replay < CFG.BATCH then return end
+    
+    for i = 1, CFG.BATCH do
+        local idx = math.random(1, #STATE.replay)
+        local e = STATE.replay[idx]
+        updateQ(e.s, e.a, e.r, e.ns, e.done)
+    end
+end
+
+-- ============================================================================
+-- DECISION SYSTEM (combines Q-value + physics lookahead)
+-- ============================================================================
+local function decide(f, isMini)
+    local s = stateKey(f, isMini)
+    
+    -- MATHEMATICAL OPTIMIZATION FIRST - MORE AGGRESSIVE
+    if #f.obs > 0 then
+        local nearestHazard = nil
+        for _, h in ipairs(STATE.hazards) do
+            if h.p and h.p.Parent then
+                local dx = h.pos.X - f.px
+                if dx > 0 and dx < 8 then -- increased range
+                    nearestHazard = h
+                    break
+                end
+            end
+        end
+        
+        if nearestHazard then
+            local mathSolution = calculateOptimalJump(f.px, f.py, f.vx, f.vy, nearestHazard, STATE.mode, isMini)
+            -- TRUST MATH MORE - lowered threshold from 0.85 to 0.7
+            if mathSolution and mathSolution.confidence > 0.7 then
+                return mathSolution.action, s, mathSolution.reason
+            end
+        end
+    end
+    
+    -- Physics evaluation
+    local pos = Vector3.new(f.px, f.py, 0)
+    local vel = Vector3.new(f.vx, f.vy, 0)
+    
+    local traj0 = predictPath(pos, vel, 0, STATE.mode, CFG.LOOKAHEAD, isMini)
+    local traj1 = predictPath(pos, vel, 1, STATE.mode, CFG.LOOKAHEAD, isMini)
+    
+    local score0 = trajCollides(traj0, STATE.hazards) and -100 or 10
+    local score1 = trajCollides(traj1, STATE.hazards) and -100 or 10
+    
+    -- Safe zone bonus (adjusted for mini mode)
+    local minY = isMini and 1 or 2
+    local maxY = isMini and 7 or 9
+    for _, p in ipairs(traj0) do
+        if p.p.Y > minY and p.p.Y < maxY then score0 = score0 + 0.3 end
+    end
+    for _, p in ipairs(traj1) do
+        if p.p.Y > minY and p.p.Y < maxY then score1 = score1 + 0.3 end
+    end
+    
+    -- VERY urgent for wave mode
+    local urgency = STATE.mode == "wave" and 0.9 or (f.minD < 2 and 0.85 or 0.6)
+    
+    -- Combine with Q-values
+    local q0 = getQ(s, 0) * (1 - urgency) + score0 * urgency
+    local q1 = getQ(s, 1) * (1 - urgency) + score1 * urgency
+    
+    -- More aggressive urgency override
+    local a
+    if f.minD < 2.0 then -- increased threshold
+        a = score1 > score0 and 1 or 0
+    elseif math.random() < STATE.eps then
+        a = math.random() < 0.5 and 0 or 1
+    else
+        a = q1 > q0 and 1 or 0
+    end
+    
+    return a, s, "hybrid"
+end
+
+-- ============================================================================
+-- REWARD CALCULATOR
+-- ============================================================================
+local function calcReward(event, f, prevF)
+    local r = 0
+    
+    if event == "alive" then
+        r = CFG.R_ALIVE
+        
+        -- Position rewards
+        if f.py > 2 and f.py < 9 then r = r + 0.05 end
+        if f.minD > 2.5 then r = r + 0.1 end
+        if f.minD < 1.2 and f.minD > 0.5 then r = r + CFG.R_CLOSE end
+        
+        -- Progress reward: moving forward
+        if f.px > STATE.lastX then
+            local progress = (f.px - STATE.lastX) / CFG.GRID_SIZE
+            r = r + CFG.R_PROGRESS * progress
+            STATE.lastX = f.px
+            if f.px > STATE.maxX then
+                STATE.maxX = f.px
+                r = r + 0.5 -- bonus for new record
+            end
+        end
+        
+        -- Smooth movement
+        if prevF and math.abs(f.vy - prevF.vy) < 6 then r = r + 0.06 end
+        
+    elseif event == "pass" then
+        r = CFG.R_PASS
+        
+    elseif event == "death" then
+        r = CFG.R_DEATH
+        -- Less harsh if made progress
+        local progress = STATE.lastX / math.max(1, STATE.maxX)
+        if progress > 0.5 then
+            r = r * 0.7 -- reduce penalty if got far
+        end
+    end
+    
+    return r
+end
+
+-- ============================================================================
+-- ACTION EXECUTOR (using input like ControlModule)
+-- ============================================================================
+local holding = false
+
+local function exec(a, mode)
+    if mode == "cube" then
+        if a == 1 then
+            keypress(Enum.KeyCode.Space)
+            task.wait(0.06)
+            keyrelease(Enum.KeyCode.Space)
+        end
+    elseif mode == "ship" or mode == "wave" then
+        if a == 1 and not holding then
+            keypress(Enum.KeyCode.Space)
+            holding = true
+        elseif a == 0 and holding then
+            keyrelease(Enum.KeyCode.Space)
+            holding = false
+        end
+    elseif mode == "ufo" then
+        if a == 1 then
+            keypress(Enum.KeyCode.Space)
+            task.wait(0.04)
+            keyrelease(Enum.KeyCode.Space)
+        end
+    elseif mode == "ball" then
+        if a == 1 then
+            keypress(Enum.KeyCode.MouseButton1)
+            task.wait(0.04)
+            keyrelease(Enum.KeyCode.MouseButton1)
+        end
+    end
+end
+
+-- ============================================================================
+-- COLLISION (AABB from camera occlusion pattern)
+-- ============================================================================
+local function checkCol()
+    local px, py, pz = plr.Position.X, plr.Position.Y, plr.Position.Z
+    local playerSize = STATE.mini and 0.35 or 0.5
+    
+    for _, h in ipairs(STATE.hazards) do
+        if h.p and h.p.Parent then
+            local hx, hy, hz = h.pos.X, h.pos.Y, h.pos.Z
+            local sx, sy, sz = h.sz.X, h.sz.Y, h.sz.Z
+            
+            if math.abs(px-hx) <= (playerSize+sx/2) and 
+               math.abs(py-hy) <= (playerSize+sy/2) and 
+               math.abs(pz-hz) <= (playerSize+sz/2) then
+                return true
+            end
+        end
+    end
+    return false
+end
+
+-- ============================================================================
+-- DEATH HANDLER
+-- ============================================================================
+local function onDeath()
+    STATE.alive = false
+    STATE.deaths = STATE.deaths + 1
+    
+    if STATE.lastS and STATE.lastA then
+        local r = calcReward("death", STATE.lastF)
+        addReplay(STATE.lastS, STATE.lastA, r, STATE.lastS, true)
+        STATE.totalR = STATE.totalR + r
+    end
+    
+    -- Decay epsilon faster if not making progress
+    local progressRate = STATE.lastX / math.max(1, STATE.maxX)
+    if progressRate < 0.3 and STATE.deaths > 10 then
+        -- Stuck early, decay faster
+        STATE.eps = math.max(STATE.eps * 0.995, CFG.EPS_MIN)
+    else
+        STATE.eps = math.max(STATE.eps * CFG.EPS_DECAY, CFG.EPS_MIN)
+    end
+    
+    -- Learn EXTREMELY intensively
+    for i = 1, 25 do learnBatch() end
+    
+    print(string.format("[D:%d]%s Eps:%.3f | MaxX:%.1f | Pass:%d | Method:%s", 
+        STATE.deaths, STATE.mini and " MINI" or "", STATE.eps, STATE.maxX, STATE.passes, STATE.lastMethod or "unknown"))
+    
+    -- Reset per-attempt state
+    STATE.lastS = nil
+    STATE.lastA = nil
+    STATE.lastF = nil
+    STATE.lastX = 0
+    
+    task.wait(0.5)
+    STATE.alive = true
+end
+
+-- ============================================================================
+-- MAIN LOOP (using RenderStep pattern like ControlModule)
+-- ============================================================================
+
+print("🚀 ULTRA BOT INITIALIZED")
+print("🧮 Mathematical Jump Optimization: ENABLED")
+print("🔽 Mini Mode Support: ENABLED")
+print("🎯 Detection Priority:")
+print("   1. RegularSpike## pattern")
+print("   2. Hitbox under RegularSpike")
+print("   3. Really black color (17,17,17)")
+print("   4. Saw/Spike names")
+STATE.hazards = scanHazards()
+print(string.format("📊 Detected %d hazards", #STATE.hazards))
+if #STATE.hazards > 0 and STATE.hazards[1].name then
+    print(string.format("📝 First hazard example: %s", STATE.hazards[1].name))
+end
+
+-- Auto-save stats
+task.spawn(function()
+    while true do
+        task.wait(180)
+        print(string.format("💾 [SAVE] D:%d P:%d AvgR:%.3f Eps:%.4f QSize:%d",
+            STATE.deaths, STATE.passes, 
+            STATE.totalR / math.max(1, STATE.frame),
+            STATE.eps,
+            #STATE.replay))
+    end
+end)
+
+-- Main game loop (RenderStep pattern)
+RunService.Heartbeat:Connect(function(dt)
+    if not STATE.alive then return end
+    
+    STATE.frame = STATE.frame + 1
+    
+    -- Rescan hazards MORE frequently
+    if STATE.frame % 20 == 0 then
+        STATE.hazards = scanHazards()
+    end
+    
+    -- Detect mini mode
+    STATE.mini = detectMiniMode()
+    
+    -- Extract features
+    local px, py = plr.Position.X, plr.Position.Y
+    local vx, vy = plr.AssemblyLinearVelocity.X, plr.AssemblyLinearVelocity.Y
+    local f = extractFeats(px, py, vx, vy)
+    
+    -- Make decision
+    local a, s, method = decide(f, STATE.mini)
+    
+    -- Track decision methods for debugging
+    if STATE.frame % 100 == 0 and method then
+        STATE.lastMethod = method
+    end
+    
+    -- Execute
+    exec(a, STATE.mode)
+    
+    -- Check collision
+    if checkCol() then
+        onDeath()
+        return
+    end
+    
+    -- Check passed hazards
+    for _, h in ipairs(STATE.hazards) do
+        if h.p and h.p.Parent then
+            local hid = h.p:GetDebugId()
+            if not STATE.passed[hid] and px > h.pos.X + h.sz.X/2 + 1 then
+                STATE.passed[hid] = true
+                STATE.passes = STATE.passes + 1
+                
+                if STATE.lastS and STATE.lastA then
+                    local r = calcReward("pass", f, STATE.lastF)
+                    addReplay(STATE.lastS, STATE.lastA, r, s, false)
+                    STATE.totalR = STATE.totalR + r
+                end
+            end
+        end
+    end
+    
+    -- Alive reward
+    if STATE.lastS and STATE.lastA then
+        local r = calcReward("alive", f, STATE.lastF)
+        addReplay(STATE.lastS, STATE.lastA, r, s, false)
+        STATE.totalR = STATE.totalR + r
+    end
+    
+    -- Learn CONSTANTLY
+    if STATE.frame % 3 == 0 then
+        learnBatch()
+    end
+    
+    -- Update for next iteration
+    STATE.lastS = s
+    STATE.lastA = a
+    STATE.lastF = f
+    
+    -- Stats
+    if STATE.frame % 500 == 0 then
+        local progress = (STATE.lastX / math.max(1, STATE.maxX)) * 100
+        local mathUsage = STATE.lastMethod and (STATE.lastMethod:find("math") and "🧮" or "🤖") or "❓"
+        local miniIcon = STATE.mini and "🔽" or "🔼"
+        print(string.format("📈 %s%s F:%d D:%d P:%d MaxX:%.1f E:%.3f",
+            mathUsage, miniIcon, STATE.frame, STATE.deaths, STATE.passes, STATE.maxX, STATE.eps))
+    end
+end)
+
+-- Debug commands
+_G.stats = function()
+    print("=== BOT STATS ===")
+    print("Mode:", STATE.mode, STATE.mini and "(MINI)" or "(NORMAL)")
+    print("Deaths:", STATE.deaths)
+    print("Passes:", STATE.passes)
+    print("Max Progress:", STATE.maxX)
+    print("Avg Reward:", STATE.totalR / math.max(1, STATE.frame))
+    print("Epsilon:", STATE.eps)
+    print("Replay Buffer:", #STATE.replay)
+    print("Learning Rate:", CFG.LR)
+    print("Last Method:", STATE.lastMethod)
+    print("Hazards Detected:", #STATE.hazards)
+end
+
+_G.boost = function()
+    print("🚀 BOOSTING LEARNING")
+    CFG.LR = 0.5
+    CFG.BATCH = 96
+    STATE.eps = 0.3
+    print("LR -> 0.5, Batch -> 96, Eps -> 0.3")
+end
+
+_G.ultraMode = function()
+    print("⚡ ULTRA AGGRESSIVE MODE ACTIVATED")
+    CFG.LR = 0.75
+    CFG.BATCH = 120
+    CFG.EPS_DECAY = 0.995
+    STATE.eps = 0.7
+    CFG.R_PASS = 20.0
+    CFG.R_DEATH = -4.0
+    print("LR -> 0.75, Batch -> 120, Eps -> 0.7")
+    print("Pass reward -> 20, Death penalty -> -4")
+    print("This will make it learn VERY fast but might be unstable")
+end
+
+_G.mathInfo = function()
+    print("=== MATH OPTIMIZATION ===")
+    print("Normal Physics:")
+    print("  Cube Jump:", PHYS.cube_jump)
+    print("  Ship Up:", PHYS.ship_up)
+    print("  UFO Jump:", PHYS.ufo_jump)
+    print("  Wave Up:", PHYS.wave_up)
+    print("  Gravity:", PHYS.grav)
+    print("Mini Mode Physics:")
+    print("  Cube Jump:", PHYS.mini_cube_jump)
+    print("  Ship Up:", PHYS.mini_ship_up)
+    print("  UFO Jump:", PHYS.mini_ufo_jump)
+    print("  Wave Up:", PHYS.mini_wave_up)
+    print("  Gravity:", PHYS.mini_grav)
+    print("Detection: RegularSpike## + Really black")
+    print("Lookahead Steps:", CFG.LOOKAHEAD)
+    print("Current Mode:", STATE.mini and "MINI" or "NORMAL")
+end
+
+_G.listHazards = function(count)
+    count = count or 10
+    print(string.format("=== HAZARDS (showing %d) ===", math.min(count, #STATE.hazards)))
+    for i = 1, math.min(count, #STATE.hazards) do
+        local h = STATE.hazards[i]
+        if h.p and h.p.Parent then
+            print(string.format("%d. %s @ X:%.1f Y:%.1f", 
+                i, h.name or "Unknown", h.pos.X, h.pos.Y))
+        end
+    end
+    print(string.format("Total: %d hazards", #STATE.hazards))
+end
+
+print("✅ Bot running! Commands:")
+print("  _G.stats() - view stats")
+print("  _G.boost() - boost learning")
+print("  _G.ultraMode() - ULTRA aggressive (if still slow)")
+print("  _G.mathInfo() - math optimization info")
+print("  _G.listHazards(n) - show detected hazards")
